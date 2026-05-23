@@ -1,0 +1,247 @@
+# Authentication API Testing
+# VS Code REST Client extension required
+# Base URL: http://localhost:3002/api/v1
+
+@baseUrl = http://localhost:3002/api/v1
+@contentType = application/json
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 USER REGISTRATION                       │
+# ╰─────────────────────────────────────────────────────────╯
+
+### ✅ Register new USER
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Test User",
+  "email": "pyxisaso@denipl.com",
+  "password": "TestPassword123!",
+  "phoneNumber": "01700000000",
+  "role": "USER"
+}
+
+### ✅ Register new ORGANIZER
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Event Organizer",
+  "email": "organizer@example.com",
+  "phoneNumber": "01711111111",
+  "password": "TestPassword123!",
+  "role": "ORGANIZER"
+}
+
+### ✅ Register ADMIN
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Admin User",
+  "email": "admin@omesh.com",
+  "password": "AdminPassword123!",
+  "phoneNumber": "01711111111",
+  "role": "ADMIN"
+}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 USER AUTHENTICATION                     │
+# ╰─────────────────────────────────────────────────────────╯
+
+### ✅ Login as USER
+# @name loginUser
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "NewPassword456!"
+}
+
+### ✅ Login as ORGANIZER
+# @name loginOrganizer
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "organizer@example.com",
+  "password": "TestPassword123!"
+}
+
+### ✅ Login as ADMIN
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@omesh.com",
+  "password": "AdminPassword123!"
+}
+
+### ❌ Login with invalid credentials (expect 401)
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "invalid@example.com",
+  "password": "wrongpassword"
+}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 TOKEN MANAGEMENT                        │
+# ╰─────────────────────────────────────────────────────────╯
+
+@userToken = {{loginUser.response.body.data.tokens.accessToken}}
+@userRefreshToken = {{loginUser.response.body.data.tokens.refreshToken}}
+@adminToken = {{loginAdmin.response.body.data.tokens.accessToken}}
+
+### ✅ Refresh token
+POST {{baseUrl}}/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "{{userRefreshToken}}"
+}
+
+### ✅ Get current user info
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{userToken}}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 PROFILE MANAGEMENT                      │
+# ╰─────────────────────────────────────────────────────────╯
+
+### ✅ Get user profile
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{userToken}}
+
+### ✅ Update user profile
+PUT {{baseUrl}}/auth/profile
+Authorization: Bearer {{userToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Updated Name",
+  "firstName": "Updated",
+  "lastName": "Name",
+  "phoneNumber": "01799999999",
+  "address": "456 New Street",
+  "gender": "MALE",
+  "dateOfBirth": "1995-06-15",
+  "avatarUrl": "https://example.com/avatar.jpg"
+}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 PASSWORD MANAGEMENT                     │
+# ╰─────────────────────────────────────────────────────────╯
+
+### ✅ Change password
+POST {{baseUrl}}/auth/change-password
+Authorization: Bearer {{userToken}}
+Content-Type: {{contentType}}
+
+{
+  "currentPassword": "TestPassword123!",
+  "newPassword": "NewPassword456!",
+  "confirmPassword": "NewPassword456!"
+}
+
+### ✅ Forgot password (get reset code)
+# @name forgotPassword
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: {{contentType}}
+
+{
+  "email": "pyxisaso@denipl.com"
+}
+
+### ✅ Reset password using code from forgot-password response
+POST {{baseUrl}}/auth/reset-password
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "token": "PASTE_RESET_CODE_HERE",
+  "password": "ResetPassword789!",
+  "confirmPassword": "ResetPassword789!"
+}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 ADMIN ENDPOINTS                         │
+# ╰─────────────────────────────────────────────────────────╯
+
+### ✅ Get user statistics (Admin only)
+GET {{baseUrl}}/auth/stats
+Authorization: Bearer {{adminToken}}
+
+### ❌ Access admin endpoint with non-admin token (expect 403)
+GET {{baseUrl}}/auth/stats
+Authorization: Bearer {{userToken}}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 LOGOUT & CLEANUP                        │
+# ╰─────────────────────────────────────────────────────────╯
+
+### ✅ Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{userToken}}
+
+### ⚠️ Delete account (use with caution)
+# DELETE {{baseUrl}}/auth/account
+# Authorization: Bearer {{userToken}}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 ERROR SCENARIOS                         │
+# ╰─────────────────────────────────────────────────────────╯
+
+### ❌ Register with existing email (expect 409)
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Duplicate",
+  "email": "user@example.com",
+  "password": "TestPassword123!",
+  "role": "USER"
+}
+
+### ❌ Register with invalid role (expect 400)
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Test",
+  "email": "test@example.com",
+  "password": "TestPassword123!",
+  "role": "LANDLORD"
+}
+
+### ❌ Register with weak password (expect 400)
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Weak Password User",
+  "email": "weak@example.com",
+  "password": "123",
+  "role": "USER"
+}
+
+### ❌ Access protected route without token (expect 401)
+GET {{baseUrl}}/auth/profile
+
+### ❌ Access protected route with invalid token (expect 401)
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer invalid-token-here
+
+### ❌ Invalid email format (expect 400)
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Test User",
+  "email": "not-an-email",
+  "password": "TestPassword123!",
+  "role": "USER"
+}

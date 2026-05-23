@@ -1,0 +1,251 @@
+# ====================================================================
+# McCann & Curran Property Management API - Git Ignore Configuration
+# ====================================================================
+
+# ────────────────────────────────────────────────────────────────────
+# ENVIRONMENT & SECRETS
+# ────────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+*.env
+
+# ────────────────────────────────────────────────────────────────────
+# DEPENDENCIES
+# ────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnp
+.pnp.js
+
+# ────────────────────────────────────────────────────────────────────
+# RUNTIME DATA
+# ────────────────────────────────────────────────────────────────────
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ────────────────────────────────────────────────────────────────────
+# COVERAGE & TESTING
+# ────────────────────────────────────────────────────────────────────
+lib-cov
+coverage/
+nyc_output/
+.nyc_output
+.coverage
+*.lcov
+.jest/
+
+# ────────────────────────────────────────────────────────────────────
+# LOGS
+# ────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ────────────────────────────────────────────────────────────────────
+# RUNTIME DATA
+# ────────────────────────────────────────────────────────────────────
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ────────────────────────────────────────────────────────────────────
+# UPLOADS & TEMPORARY FILES
+# ────────────────────────────────────────────────────────────────────
+uploads/
+tmp/
+temp/
+.tmp/
+.temp/
+
+# ────────────────────────────────────────────────────────────────────
+# BUILD OUTPUTS
+# ────────────────────────────────────────────────────────────────────
+dist/
+build/
+out/
+
+# ────────────────────────────────────────────────────────────────────
+# EDITOR & IDE
+# ────────────────────────────────────────────────────────────────────
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ────────────────────────────────────────────────────────────────────
+# OPERATING SYSTEMS
+# ────────────────────────────────────────────────────────────────────
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ────────────────────────────────────────────────────────────────────
+# PACKAGE MANAGERS
+# ────────────────────────────────────────────────────────────────────
+
+# NPM
+.npm
+.npmrc
+package-lock.json
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+yarn.lock
+
+# PNPM
+.pnpm-debug.log*
+
+# ────────────────────────────────────────────────────────────────────
+# PRISMA
+# ────────────────────────────────────────────────────────────────────
+# Keep schema and migrations, but ignore generated client
+/prisma/generated/
+
+# ────────────────────────────────────────────────────────────────────
+# CERTIFICATES & KEYS
+# ────────────────────────────────────────────────────────────────────
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# ────────────────────────────────────────────────────────────────────
+# DOCKER
+# ────────────────────────────────────────────────────────────────────
+docker-compose.override.yml
+.docker/
+
+# ────────────────────────────────────────────────────────────────────
+# MONITORING & ANALYTICS
+# ────────────────────────────────────────────────────────────────────
+newrelic.js
+
+# ────────────────────────────────────────────────────────────────────
+# CACHE DIRECTORIES
+# ────────────────────────────────────────────────────────────────────
+.cache/
+.parcel-cache/
+.nuxt/
+.next/
+
+# ────────────────────────────────────────────────────────────────────
+# MISCELLANEOUS
+# ────────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
+# ────────────────────────────────────────────────────────────────────
+# PROJECT SPECIFIC
+# ────────────────────────────────────────────────────────────────────
+
+# Backup files
+*.backup
+*.bak
+
+# Database files (if using SQLite for development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentation build
+docs/_build/
+
+# ────────────────────────────────────────────────────────────────────
+# KEEP CERTAIN FILES (using !)
+# ────────────────────────────────────────────────────────────────────
+
+# Keep example environment file
+!.env.example
+
+# Keep HTTP test files for API documentation
+!**/*.test.http
+
+# Keep README files
+!**/README.md
+
+# Keep necessary config files
+!.eslintrc.js
+!.prettierrc
+!jest.config.js
+
+# ====================================================================
+# SECURITY REMINDER:
+# Never commit sensitive information like:
+# - Environment files (.env)
+# - Database credentials  
+# - JWT secrets
+# - API keys
+# - Certificates and private keys
+# - User uploaded files
+# ====================================================================

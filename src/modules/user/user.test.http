@@ -1,0 +1,290 @@
+# User Management API Testing
+# Test file for user management endpoints using VS Code REST Client extension
+# Base URL: http://localhost:3000/api/v1
+
+@baseUrl = http://localhost:3000/api/v1
+@contentType = application/json
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                     SETUP                               │
+# ╰─────────────────────────────────────────────────────────╯
+
+### Login as admin to get token
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@mccannandcurran.ie",
+  "password": "AdminPassword123!"
+}
+
+@adminToken = {{loginAdmin.response.body.data.tokens.accessToken}}
+
+### Login as landlord for testing
+# @name loginLandlord
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "john.landlord@example.com",
+  "password": "SecurePassword123!"
+}
+
+@landlordToken = {{loginLandlord.response.body.data.tokens.accessToken}}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 USER MANAGEMENT (ADMIN)                 │
+# ╰─────────────────────────────────────────────────────────╯
+
+### Get all users with pagination and filters
+GET {{baseUrl}}/users?page=1&limit=10&sortBy=createdAt&sortOrder=desc
+Authorization: Bearer {{adminToken}}
+
+### Get all users with search
+GET {{baseUrl}}/users?search=john&role=LANDLORD
+Authorization: Bearer {{adminToken}}
+
+### Create new landlord user
+POST {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Michael O'Connor",
+  "email": "michael.landlord@example.com",
+  "password": "SecurePassword123!",
+  "phone": "+353871234567",
+  "address": "789 Galway Street, Galway, Ireland",
+  "ppsNumber": "1234567A",
+  "role": "LANDLORD",
+  "dateOfBirth": "1975-03-20",
+  "pps": "1234567A",
+  "pps2": "7654321B"
+}
+
+### Create new tenant user
+# @name createTenant
+POST {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Sarah Murphy",
+  "email": "sarah.tenant@example.com",
+  "password": "SecurePassword123!",
+  "phone": "+353879876543",
+  "address": "456 Limerick Road, Limerick, Ireland",
+  "role": "TENANT",
+  "moveInDate": "2024-03-01",
+  "status": "ACTIVE"
+}
+
+@newTenantId = {{createTenant.response.body.data.id}}
+
+### Get user by ID
+GET {{baseUrl}}/users/{{newTenantId}}
+Authorization: Bearer {{adminToken}}
+
+### Update user information
+PUT {{baseUrl}}/users/{{newTenantId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Sarah Murphy Updated",
+  "phone": "+353879876999",
+  "address": "Updated Address, Limerick, Ireland"
+}
+
+### Get users by role - Landlords
+GET {{baseUrl}}/users/role/LANDLORD?limit=20
+Authorization: Bearer {{adminToken}}
+
+### Get users by role - Tenants
+GET {{baseUrl}}/users/role/TENANT?limit=20
+Authorization: Bearer {{adminToken}}
+
+### Search users
+GET {{baseUrl}}/users/search?q=sarah&limit=10
+Authorization: Bearer {{adminToken}}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                  BULK OPERATIONS                        │
+# ╰─────────────────────────────────────────────────────────╯
+
+### Bulk change role (example - be careful with real data)
+# POST {{baseUrl}}/users/bulk-action
+# Authorization: Bearer {{adminToken}}
+# Content-Type: {{contentType}}
+
+# {
+#   "userIds": ["{{newTenantId}}"],
+#   "action": "changeRole",
+#   "params": {
+#     "role": "LANDLORD"
+#   }
+# }
+
+### Bulk delete users (DANGEROUS - use with caution)
+# POST {{baseUrl}}/users/bulk-action
+# Authorization: Bearer {{adminToken}}
+# Content-Type: {{contentType}}
+
+# {
+#   "userIds": ["{{newTenantId}}"],
+#   "action": "delete"
+# }
+
+# ╭─────────────────────────────────────────────────────────╮
+# │               DASHBOARD & ANALYTICS                     │
+# ╰─────────────────────────────────────────────────────────╯
+
+### Get current user dashboard
+GET {{baseUrl}}/users/me/dashboard
+Authorization: Bearer {{landlordToken}}
+
+### Get current user analytics
+GET {{baseUrl}}/users/me/analytics
+Authorization: Bearer {{landlordToken}}
+
+### Get specific user dashboard (Admin only)
+GET {{baseUrl}}/users/{{newTenantId}}/dashboard
+Authorization: Bearer {{adminToken}}
+
+### Get specific user analytics (Admin only)
+GET {{baseUrl}}/users/{{newTenantId}}/analytics
+Authorization: Bearer {{adminToken}}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 AUTHORIZATION TESTING                   │
+# ╰─────────────────────────────────────────────────────────╯
+
+### Try to access admin endpoint with non-admin token (should fail)
+GET {{baseUrl}}/users
+Authorization: Bearer {{landlordToken}}
+
+### Try to access other user's dashboard without admin (should fail)
+GET {{baseUrl}}/users/{{newTenantId}}/dashboard
+Authorization: Bearer {{landlordToken}}
+
+### Try to create user without admin role (should fail)
+POST {{baseUrl}}/users
+Authorization: Bearer {{landlordToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Unauthorized User",
+  "email": "unauthorized@example.com",
+  "password": "SecurePassword123!",
+  "role": "TENANT"
+}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                 ERROR SCENARIOS                         │
+# ╰─────────────────────────────────────────────────────────╯
+
+### Create user with existing email (should fail)
+POST {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Duplicate User",
+  "email": "john.landlord@example.com",
+  "password": "SecurePassword123!",
+  "role": "LANDLORD"
+}
+
+### Create user with weak password (should fail)
+POST {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Weak Password User",
+  "email": "weak@example.com",
+  "password": "123",
+  "role": "TENANT"
+}
+
+### Create user with invalid role (should fail)
+POST {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Invalid Role User",
+  "email": "invalid@example.com",
+  "password": "SecurePassword123!",
+  "role": "INVALID_ROLE"
+}
+
+### Update user with invalid email format (should fail)
+PUT {{baseUrl}}/users/{{newTenantId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "email": "invalid-email-format"
+}
+
+### Get non-existent user (should fail)
+GET {{baseUrl}}/users/non-existent-id
+Authorization: Bearer {{adminToken}}
+
+### Search without query parameter (should fail)
+GET {{baseUrl}}/users/search
+Authorization: Bearer {{adminToken}}
+
+### Search with too short query (should fail)
+GET {{baseUrl}}/users/search?q=a
+Authorization: Bearer {{adminToken}}
+
+### Bulk action with empty userIds (should fail)
+POST {{baseUrl}}/users/bulk-action
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "userIds": [],
+  "action": "delete"
+}
+
+### Bulk action with invalid action (should fail)
+POST {{baseUrl}}/users/bulk-action
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "userIds": ["{{newTenantId}}"],
+  "action": "invalidAction"
+}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                    PAGINATION                           │
+# ╰─────────────────────────────────────────────────────────╯
+
+### Test pagination - first page
+GET {{baseUrl}}/users?page=1&limit=2
+Authorization: Bearer {{adminToken}}
+
+### Test pagination - second page
+GET {{baseUrl}}/users?page=2&limit=2
+Authorization: Bearer {{adminToken}}
+
+### Test pagination with sorting
+GET {{baseUrl}}/users?page=1&limit=5&sortBy=name&sortOrder=asc
+Authorization: Bearer {{adminToken}}
+
+### Test pagination with large page (should return empty)
+GET {{baseUrl}}/users?page=999&limit=10
+Authorization: Bearer {{adminToken}}
+
+# ╭─────────────────────────────────────────────────────────╮
+# │                     CLEANUP                             │
+# ╰─────────────────────────────────────────────────────────╯
+
+### Delete created test user (uncomment when needed)
+# DELETE {{baseUrl}}/users/{{newTenantId}}
+# Authorization: Bearer {{adminToken}}

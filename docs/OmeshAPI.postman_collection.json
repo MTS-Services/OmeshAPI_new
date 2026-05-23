@@ -1,0 +1,717 @@
+{
+  "info": {
+    "name": "OmeshAPI",
+    "description": "Complete Auth API collection for OmeshAPI\n\n**Authentication:**\n- Register or Login to get access & refresh tokens\n- Tokens are auto-saved to environment variables via test scripts\n\n**Base URL:** http://localhost:3002\n**API Prefix:** /api/v1\n\n**Roles:** ADMIN | ORGANIZER | USER",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register USER",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"user@example.com\",\n  \"password\": \"TestPassword123!\",\n  \"role\": \"USER\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"01700000000\",\n  \"gender\": \"MALE\",\n  \"dateOfBirth\": \"1995-06-15\",\n  \"address\": \"123 Main Street\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.tokens) {",
+                  "  pm.environment.set('accessToken', json.data.tokens.accessToken);",
+                  "  pm.environment.set('refreshToken', json.data.tokens.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Register ORGANIZER",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Event Organizer\",\n  \"email\": \"organizer@example.com\",\n  \"password\": \"TestPassword123!\",\n  \"role\": \"ORGANIZER\",\n  \"firstName\": \"Event\",\n  \"lastName\": \"Organizer\",\n  \"phoneNumber\": \"01711111111\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Register ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@omesh.com\",\n  \"password\": \"AdminPassword123!\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.tokens) {",
+                  "  pm.environment.set('adminToken', json.data.tokens.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"TestPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.tokens) {",
+                  "  pm.environment.set('accessToken', json.data.tokens.accessToken);",
+                  "  pm.environment.set('refreshToken', json.data.tokens.refreshToken);",
+                  "  console.log('Tokens saved to environment');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login as Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@omesh.com\",\n  \"password\": \"AdminPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.tokens) {",
+                  "  pm.environment.set('adminToken', json.data.tokens.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.accessToken) {",
+                  "  pm.environment.set('accessToken', json.data.accessToken);",
+                  "  pm.environment.set('refreshToken', json.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.unset('accessToken');",
+                  "pm.environment.unset('refreshToken');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👤 Profile",
+      "item": [
+        {
+          "name": "Get Current User (me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has user id', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has profile object', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('profile');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"phoneNumber\": \"01799999999\",\n  \"address\": \"456 New Street\",\n  \"gender\": \"MALE\",\n  \"dateOfBirth\": \"1995-06-15\",\n  \"avatarUrl\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔑 Password",
+      "item": [
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"TestPassword123!\",\n  \"newPassword\": \"NewPassword456!\",\n  \"confirmPassword\": \"NewPassword456!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "change-password"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "forgot-password"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.code) {",
+                  "  pm.environment.set('resetCode', json.data.code);",
+                  "  console.log('Reset code saved:', json.data.code);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"token\": \"{{resetCode}}\",\n  \"password\": \"ResetPassword789!\",\n  \"confirmPassword\": \"ResetPassword789!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "reset-password"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.unset('resetCode');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🛡️ Admin",
+      "item": [
+        {
+          "name": "Get User Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "stats"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has stats', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data).to.have.property('total');",
+                  "  pm.expect(json.data).to.have.property('admin');",
+                  "  pm.expect(json.data).to.have.property('organizer');",
+                  "  pm.expect(json.data).to.have.property('user');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get User Stats (non-admin, expect 403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "stats"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⚠️ Error Scenarios",
+      "item": [
+        {
+          "name": "Register - Duplicate Email (expect 409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate\",\n  \"email\": \"user@example.com\",\n  \"password\": \"TestPassword123!\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Register - Invalid Role (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\",\n  \"email\": \"test@example.com\",\n  \"password\": \"TestPassword123!\",\n  \"role\": \"LANDLORD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Register - Weak Password (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\",\n  \"email\": \"weak@example.com\",\n  \"password\": \"123\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login - Wrong Password (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"WrongPassword99!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Profile - No Token (expect 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Profile - Invalid Token (expect 401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer invalid-token-here" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Not Found (expect 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/nonexistent",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "nonexistent"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🗑️ Cleanup",
+      "item": [
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/account",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "account"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.unset('accessToken');",
+                  "pm.environment.unset('refreshToken');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,791 @@
+{
+  "info": {
+    "name": "Property Management API",
+    "description": "Complete API collection for Property Management Platform\n\nAuthor: McCann & Curran Development Team\nVersion: 1.0.0\n\n**Authentication:**\n- Most endpoints require Bearer token in Authorization header\n- Register/Login to get access tokens\n- Tokens automatically set in environment variables\n\n**Base URL:** http://localhost:3001\n\n**Available Modules:**\n- System Health & Status\n- Authentication & User Management\n- Properties (Coming Soon)\n- Tenancies (Coming Soon)\n- Maintenance (Coming Soon)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "property-management-api"
+  },
+  "item": [
+    {
+      "name": "🔧 System & Health",
+      "item": [
+        {
+          "name": "Root Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "health"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success property', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Health data is present', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "    pm.expect(jsonData.data.status).to.eql('OK');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "API Documentation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "docs"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Documentation contains API endpoints', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('API_ENDPOINTS');",
+                  "    pm.expect(jsonData.data.API_ENDPOINTS).to.have.property('AUTH');",
+                  "    pm.expect(jsonData.data.API_ENDPOINTS).to.have.property('USERS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"role\": \"TENANT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 or 409', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('User registered successfully', function () {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.success).to.be.true;",
+                  "        pm.expect(jsonData.message).to.include('registered');",
+                  "    });",
+                  "}",
+                  "",
+                  "if (pm.response.code === 409) {",
+                  "    pm.test('User already exists', function () {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.message).to.include('already registered');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Login successful and tokens received', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('accessToken');",
+                  "    pm.expect(jsonData.data).to.have.property('refreshToken');",
+                  "    ",
+                  "    // Set tokens in environment for subsequent requests",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "    pm.collectionVariables.set('userId', jsonData.data.user.id);",
+                  "});",
+                  "",
+                  "pm.test('User data is present', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user).to.have.property('email');",
+                  "    pm.expect(jsonData.data.user).to.have.property('firstName');",
+                  "    pm.expect(jsonData.data.user).to.have.property('role');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "profile"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Profile data is present', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('email');",
+                  "    pm.expect(jsonData.data).to.have.property('firstName');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh-token"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('New tokens received', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('accessToken');",
+                  "    ",
+                  "    // Update access token",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "forgot-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Logout successful', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    // Clear tokens from environment",
+                  "    pm.collectionVariables.unset('accessToken');",
+                  "    pm.collectionVariables.unset('refreshToken');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "👥 User Management",
+      "item": [
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "TENANT",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John Updated\",\n  \"lastName\": \"Doe Updated\",\n  \"phone\": \"+353 1 234 5678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Role (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"LANDLORD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}", "role"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate User (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "{{userId}}", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏠 Properties (Coming Soon)",
+      "item": [
+        {
+          "name": "Get Properties",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/properties?page=1&limit=10&status=LET",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "properties"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "LET"
+                },
+                {
+                  "key": "type",
+                  "value": "APARTMENT",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Property",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": {\n    \"line1\": \"123 Main Street\",\n    \"line2\": \"Apt 4B\",\n    \"city\": \"Dublin\",\n    \"county\": \"Dublin\",\n    \"eircode\": \"D01 ABC123\",\n    \"country\": \"Ireland\"\n  },\n  \"type\": \"APARTMENT\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 1,\n  \"rentAmount\": 1500,\n  \"deposit\": 3000,\n  \"status\": \"VACANT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/properties",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "properties"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Tenancies (Coming Soon)",
+      "item": [
+        {
+          "name": "Get Tenancies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenancies?status=ACTIVE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "tenancies"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🛠️ Maintenance (Coming Soon)",
+      "item": [
+        {
+          "name": "Get Maintenance Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/maintenance?priority=HIGH",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "maintenance"],
+              "query": [
+                {
+                  "key": "priority",
+                  "value": "HIGH"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Maintenance Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertyId\": \"property-uuid-here\",\n  \"title\": \"Leaky tap in kitchen\",\n  \"description\": \"The kitchen tap is dripping constantly and needs repair\",\n  \"priority\": \"MEDIUM\",\n  \"category\": \"PLUMBING\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/maintenance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "maintenance"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "❌ Error Testing",
+      "item": [
+        {
+          "name": "Test 404 Error",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/nonexistent-endpoint",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "nonexistent-endpoint"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error message is present', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Unauthorized Access",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "profile"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Unauthorized message is present', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set base URL if not defined",
+          "if (!pm.collectionVariables.get('baseUrl')) {",
+          "    pm.collectionVariables.set('baseUrl', 'http://localhost:3001');",
+          "}",
+          "",
+          "// Set test credentials if not defined",
+          "if (!pm.collectionVariables.get('testEmail')) {",
+          "    pm.collectionVariables.set('testEmail', 'test.user@example.com');",
+          "    pm.collectionVariables.set('testPassword', 'TestPassword123!');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test to ensure all responses have proper structure",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Check for proper JSON response structure",
+          "if (pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+          "    pm.test('Response is valid JSON', function () {",
+          "        pm.response.to.be.json;",
+          "    });",
+          "    ",
+          "    if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "        pm.test('Success response has required fields', function () {",
+          "            var jsonData = pm.response.json();",
+          "            pm.expect(jsonData).to.have.property('success');",
+          "            pm.expect(jsonData).to.have.property('statusCode');",
+          "            pm.expect(jsonData).to.have.property('timestamp');",
+          "        });",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "testEmail",
+      "value": "test.user@example.com",
+      "type": "string"
+    },
+    {
+      "key": "testPassword",
+      "value": "TestPassword123!",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
