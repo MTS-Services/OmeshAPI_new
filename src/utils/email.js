@@ -165,7 +165,7 @@ class EmailService {
             {
               From: {
                 Email: process.env.SENDER_EMAIL,
-                Name: 'Endura Events Team',
+                Name: 'Endura Events',
               },
               To: [
                 {
