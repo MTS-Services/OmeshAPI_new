@@ -4,24 +4,29 @@ const { prisma } = require('../../config/database');
 
 const emailService = new EmailService();
 
-const formatEventDate = (dateValue) => {
-  if (!dateValue) return 'TBA';
+const formatStartAt = (startAt) => {
+  if (!startAt) {
+    return { date: '', time: '' };
+  }
 
-  return new Date(dateValue).toLocaleDateString('en-US', {
-    year: 'numeric',
+  const parsed = new Date(startAt);
+  if (Number.isNaN(parsed.getTime())) {
+    return { date: '', time: '' };
+  }
+
+  const date = new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
-  });
-};
+    year: 'numeric',
+  }).format(parsed);
 
-const formatEventTime = (dateValue, fallbackTime) => {
-  if (fallbackTime) return fallbackTime;
-  if (!dateValue) return 'TBA';
-
-  return new Date(dateValue).toLocaleTimeString('en-US', {
-    hour: '2-digit',
+  const time = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
     minute: '2-digit',
-  });
+    hour12: true,
+  }).format(parsed);
+
+  return { date, time };
 };
 
 const getEventDetails = async (payment) => {
@@ -61,11 +66,13 @@ const getEventDetails = async (payment) => {
     },
   });
 
+  const formattedStartAt = formatStartAt(event?.startAt);
+
   return {
     name: event?.title || payment.eventName || 'Event',
     location: event?.location || 'TBA',
-    date: formatEventDate(event?.startAt),
-    time: formatEventTime(event?.startAt, event?.time),
+    date: formattedStartAt.date || 'TBA',
+    time: formattedStartAt.time || event?.time || 'TBA',
   };
 };
 

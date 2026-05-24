@@ -435,7 +435,7 @@ class AuthService {
           <span style="font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #1d6fd6;">${plainCode}</span>
         </div>
 
-        <p style="font-size: 14px; color: #666; margin: 0 0 10px 0;">This OTP will expire in <strong>60 minutes</strong>.</p>
+        <p style="font-size: 14px; color: #666; margin: 0 0 10px 0;">This OTP will expire in <strong>2 minutes</strong>.</p>
         <p style="font-size: 14px; color: #666; margin: 0 0 18px 0;">If you did not request this, please ignore this email.</p>
 
         <hr style="border: 0; border-top: 1px solid #e6e6e6; margin: 18px 0;" />
