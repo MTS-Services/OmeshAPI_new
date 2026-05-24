@@ -360,6 +360,8 @@ class RegistrationService {
       lastName: registration.lastName,
       email: registration.email,
       phone: registration.phone || '',
+      couponCode: registration.couponCode || '',
+      selectedTShirtSize: registration.selectedTShirtSize || '',
       status: registration.status,
       source: registration.source,
       createdAt: registration.createdAt.toISOString(),

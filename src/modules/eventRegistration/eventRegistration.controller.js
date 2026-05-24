@@ -38,8 +38,8 @@ class RegistrationController {
     const rows = await this.services.getRegistrationExportData(filterDTO);
 
     const headers = [
-      'registrationId',
-      'eventId',
+      // 'registrationId',
+      // 'eventId',
       'eventTitle',
       'firstName',
       'lastName',
@@ -80,8 +80,8 @@ class RegistrationController {
 
     const worksheet = XLSX.utils.json_to_sheet(rows, {
       header: [
-        'registrationId',
-        'eventId',
+        // 'registrationId',
+        // 'eventId',
         'eventTitle',
         'firstName',
         'lastName',
