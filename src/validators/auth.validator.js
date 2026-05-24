@@ -109,29 +109,43 @@ const otpVerifySchema = Joi.object({
  * Update profile validation schema
  */
 const updateProfileSchema = Joi.object({
-  // --- User Table Fields ---
-  fullName: Joi.string().min(2).max(150).trim().optional(),
-  phone: Joi.string()
-    // .pattern(/^[\d\s+\-()+]+$/)
-    .min(7)
-    .max(20)
-    .optional(),
-  // .messages({
-  //   'string.pattern.base': 'Phone number contains invalid characters.',
-  // }),
-  avatarUrl: Joi.string().allow(null, '').optional(),
+  fullName: Joi.string().min(2).max(150).trim().optional().messages({
+    'string.min': 'Name must be at least 2 characters long',
+    'string.max': 'Name cannot exceed 150 characters',
+  }),
+
+  phone: Joi.string().min(7).max(20).trim().allow(null).empty('').optional(),
+
+  avatarUrl: Joi.string().uri().trim().allow(null).empty('').optional(),
+
   gender: Joi.string().valid('MALE', 'FEMALE', 'OTHER').optional(),
-  dateOfBirth: Joi.date().max('now').iso().optional(),
-  location: Joi.string().max(200).trim().allow(null, '').optional(),
-  teamClub: Joi.string().max(200).trim().allow(null, '').optional(),
+
+  dateOfBirth: Joi.date().max('now').iso().optional().messages({
+    'date.max': 'Date of birth cannot be in the future',
+    'date.format': 'Please use a valid ISO date format (YYYY-MM-DD)',
+  }),
+
+  location: Joi.string().max(200).trim().allow(null).empty('').optional(),
+  teamClub: Joi.string().max(200).trim().allow(null).empty('').optional(),
 
   // --- OrganizerProfile Table Fields ---
-  organizationName: Joi.string().min(2).max(100).trim().optional(),
-  bio: Joi.string().max(500).trim().allow(null, '').optional(),
-  website: Joi.string().uri().trim().allow(null, '').optional().messages({
-    'string.uri':
-      'Please enter a valid website URL (e.g., https://example.com)',
-  }),
+  organizerProfile: Joi.object({
+    organizationName: Joi.string().min(2).max(100).trim().optional(),
+    bio: Joi.string().max(500).trim().allow(null).empty('').optional(),
+    website: Joi.string()
+      .uri({ scheme: ['http', 'https'] })
+      .trim()
+      .allow(null)
+      .empty('')
+      .optional()
+      .messages({
+        'string.uri':
+          'Please enter a valid website URL starting with http:// or https://',
+      }),
+  }).optional(),
+}).options({
+  stripUnknown: true,
+  abortEarly: false,
 });
 
 module.exports = {
