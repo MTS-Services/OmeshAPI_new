@@ -75,6 +75,7 @@ const UpdateEventSchema = Joi.object({
 
   price: Joi.number().precision(2).min(0).optional(),
   totalSeats: Joi.number().integer().min(0).optional(),
+  availableSeats: Joi.number().integer().min(0).optional(),
 
   headline: Joi.string().allow(null, '').optional(),
   body: Joi.string().allow(null, '').optional(),

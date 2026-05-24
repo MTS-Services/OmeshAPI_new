@@ -129,6 +129,17 @@ class EventService {
         updateData.status = 'APPROVED';
       }
 
+      const existingEvent = await this.eventRepository.getEventById(eventId);
+      if (!existingEvent) {
+        throw new AppError('Event not found', 404);
+      }
+
+      if (updateData.totalSeats) {
+        updateData.availableSeats =
+          existingEvent.availableSeats +
+          (updateData.totalSeats - existingEvent.totalSeats);
+      }
+
       const result = await this.eventRepository.updateEvent(
         eventId,
         updateData,
