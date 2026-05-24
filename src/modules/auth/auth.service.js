@@ -417,19 +417,38 @@ class AuthService {
 
       await emailService.sendMail(
         forgotPasswordDTO.email,
-        'Your OTP Code',
-        `Your OTP is ${plainCode}`,
+        'Endura Events Password Reset OTP',
+        `Hi ${user.fullName || 'User'},\n\nWe received a request to reset your Endura Events password.\n\nYour OTP code is: ${plainCode}\n\nThis OTP will expire in 60 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`,
         `
-      <div style="font-family: Arial; padding: 20px;">
-        <h2>OTP Verification</h2>
+      <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
+        <h2 style="margin-top: 0; margin-bottom: 12px; color: #1a1a1a;">Password Reset OTP</h2>
 
-        <p>Your verification code is:</p>
+        <p style="font-size: 16px; margin: 0 0 14px 0;">Hi <strong>${user.fullName || 'User'}</strong>,</p>
 
-        <h1 style="letter-spacing: 5px; color: blue;">
-          ${plainCode}
-        </h1>
+        <p style="font-size: 16px; margin: 0 0 12px 0;">
+          We received a request to reset your Endura Events password.
+        </p>
 
-        <p>This OTP will expire in 5 minutes.</p>
+        <p style="font-size: 16px; margin: 0 0 8px 0;">Use the OTP below to continue:</p>
+
+        <div style="margin: 16px 0 18px 0; padding: 14px 18px; background: #ffffff; border: 1px dashed #1d6fd6; border-radius: 8px; text-align: center;">
+          <span style="font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #1d6fd6;">${plainCode}</span>
+        </div>
+
+        <p style="font-size: 14px; color: #666; margin: 0 0 10px 0;">This OTP will expire in <strong>60 minutes</strong>.</p>
+        <p style="font-size: 14px; color: #666; margin: 0 0 18px 0;">If you did not request this, please ignore this email.</p>
+
+        <hr style="border: 0; border-top: 1px solid #e6e6e6; margin: 18px 0;" />
+
+        <p style="font-size: 15px; line-height: 1.7; margin: 0;">
+          Best regards,<br/>
+          Endura Sports Limited<br/>
+          Powered by Powerhouse
+        </p>
+
+        <p style="font-size: 15px; margin-top: 14px; margin-bottom: 0;">
+          <a href="https://enduraevents.com" style="color: #1d6fd6; text-decoration: none;">enduraevents.com</a>
+        </p>
       </div>
     `,
       );

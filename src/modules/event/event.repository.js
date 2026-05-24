@@ -482,6 +482,12 @@ class EventRepository {
           location: true,
           startAt: true,
           time: true,
+          organizer: {
+            select: {
+              email: true,
+              fullName: true,
+            },
+          },
           registrations: {
             where: {
               status: 'CONFIRMED',

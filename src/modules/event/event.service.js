@@ -32,12 +32,8 @@ class EventService {
   }
 
   formatEventTime(dateValue, fallbackTime) {
-    if (fallbackTime) {
-      return fallbackTime;
-    }
-
     if (!dateValue) {
-      return 'TBA';
+      return fallbackTime || 'TBA';
     }
 
     return new Date(dateValue).toLocaleTimeString('en-US', {
@@ -52,32 +48,65 @@ class EventService {
     const eventTime = this.formatEventTime(event.startAt, event.time);
 
     const subject = `Registration Confirmed: ${event.title}`;
-    const text = `Hi ${participantName},\n\nYour registration for ${event.title} has been successfully confirmed.\n\nThank you for registering through Endura Events.\n\nEvent Details\nLocation: ${location}\nDate: ${eventDate}\nTime: ${eventTime}\n\nYour bib collection details and any additional event updates will be shared closer to race day.\n\nPlease ensure that you:\n- Arrive early on event day\n- Stay hydrated\n- Follow all event instructions from organizers and marshals\n\nWe're excited to have you on the start line and appreciate your support.\n\nSee you on race day.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`;
+    const text = `Hi ${participantName},\n\nYour registration for ${event.title} has been successfully confirmed.\n\nThank you for registering through Endura Events.\n\nEvent Details\nLocation: ${location}\nDate: ${eventDate}\nTime: ${eventTime}\n\nYour bib collection details and any additional event updates will be shared closer to race day.\n\nPlease ensure that you:\n* Arrive early on event day\n* Stay hydrated\n* Follow all event instructions from organizers and marshals\n\nWe're excited to have you on the start line and appreciate your support.\n\nSee you on race day.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; max-width: 620px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
+        <p style="font-size: 16px; margin: 0 0 18px 0;">Hi <strong>${participantName}</strong>,</p>
+
+        <p style="font-size: 16px; margin: 0 0 14px 0;">Your registration for <strong>${event.title}</strong> has been successfully confirmed. 🎉</p>
+
+        <p style="font-size: 16px; margin: 0 0 18px 0;">Thank you for registering through Endura Events.</p>
+
+        <p style="font-size: 16px; margin: 0 0 8px 0;"><strong>Event Details</strong></p>
+        <p style="font-size: 16px; margin: 0 0 6px 0;">📍 Location: ${location}</p>
+        <p style="font-size: 16px; margin: 0 0 6px 0;">🗓️ Date: ${eventDate}</p>
+        <p style="font-size: 16px; margin: 0 0 18px 0;">⏰ Time: ${eventTime}</p>
+
+        <p style="font-size: 16px; margin: 0 0 16px 0;">Your bib collection details and any additional event updates will be shared closer to race day.</p>
+
+        <p style="font-size: 16px; margin: 0 0 10px 0;">Please ensure that you:</p>
+        <ul style="font-size: 16px; line-height: 1.7; margin-top: 0; padding-left: 20px;">
+          <li>Arrive early on event day</li>
+          <li>Stay hydrated</li>
+          <li>Follow all event instructions from organizers and marshals</li>
+        </ul>
+
+        <p style="font-size: 16px; margin: 0 0 16px 0;">We're excited to have you on the start line and appreciate your support.</p>
+
+        <p style="font-size: 16px; margin: 0 0 20px 0;">See you on race day.</p>
+
+        <p style="font-size: 16px; line-height: 1.7; margin: 0;">
+          Best regards,<br/>
+          Endura Sports Limited<br/>
+          Powered by Powerhouse
+        </p>
+
+        <p style="font-size: 16px; margin-top: 16px; margin-bottom: 0;">🌐 <a href="https://enduraevents.com" style="color: #1d6fd6; text-decoration: none;">enduraevents.com</a></p>
+      </div>
+    `;
+
+    return { subject, text, html };
+  }
+
+  buildOrganizerApprovalEmailTemplate(organizerName, event) {
+    const location = event.location || 'TBA';
+    const eventDate = this.formatEventDate(event.startAt);
+    const eventTime = this.formatEventTime(event.startAt, event.time);
+
+    const subject = `Event Approved: ${event.title}`;
+    const text = `Hi ${organizerName},\n\nGreat news. Your event ${event.title} has been approved by admin.\n\nEvent Details\nLocation: ${location}\nDate: ${eventDate}\nTime: ${eventTime}\n\nYou can now manage your event from your organizer dashboard and follow participant registrations.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`;
     const html = `
       <div style="font-family: Arial, sans-serif; padding: 28px; background-color: #f9f9f9; max-width: 620px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
-        <p>Hi ${participantName},</p>
+        <p>Hi ${organizerName},</p>
 
-        <p>Your registration for <strong>${event.title}</strong> has been successfully confirmed.</p>
-
-        <p>Thank you for registering through Endura Events.</p>
+        <p>Great news. Your event <strong>${event.title}</strong> has been approved by admin.</p>
 
         <h3 style="margin-top: 24px; margin-bottom: 10px;">Event Details</h3>
         <p style="margin: 0 0 8px 0;"><strong>Location:</strong> ${location}</p>
         <p style="margin: 0 0 8px 0;"><strong>Date:</strong> ${eventDate}</p>
         <p style="margin: 0 0 14px 0;"><strong>Time:</strong> ${eventTime}</p>
 
-        <p>Your bib collection details and any additional event updates will be shared closer to race day.</p>
-
-        <p style="margin-bottom: 8px;">Please ensure that you:</p>
-        <ul style="margin-top: 0; line-height: 1.6;">
-          <li>Arrive early on event day</li>
-          <li>Stay hydrated</li>
-          <li>Follow all event instructions from organizers and marshals</li>
-        </ul>
-
-        <p>We're excited to have you on the start line and appreciate your support.</p>
-
-        <p>See you on race day.</p>
+        <p>You can now manage your event from your organizer dashboard and follow participant registrations.</p>
 
         <p style="margin-top: 20px;">
           Best regards,<br/>
@@ -99,40 +128,19 @@ class EventService {
       return;
     }
 
-    const uniqueParticipants = eventWithParticipants.registrations.reduce(
-      (acc, registration) => {
-        if (!registration.email) {
-          return acc;
-        }
-
-        const normalizedEmail = registration.email.toLowerCase().trim();
-        if (acc.seenEmails.has(normalizedEmail)) {
-          return acc;
-        }
-
-        acc.seenEmails.add(normalizedEmail);
-        acc.list.push({
-          email: registration.email,
-          firstName: registration.firstName || 'Participant',
-        });
-
-        return acc;
-      },
-      { seenEmails: new Set(), list: [] },
-    ).list;
-
-    if (uniqueParticipants.length === 0) {
+    const organizerEmail = eventWithParticipants.organizer?.email;
+    if (!organizerEmail) {
       return;
     }
 
-    for (const participant of uniqueParticipants) {
-      const { subject, text, html } = this.buildApprovalEmailTemplate(
-        participant.firstName,
-        eventWithParticipants,
-      );
+    const organizerName =
+      eventWithParticipants.organizer?.fullName || 'Organizer';
+    const { subject, text, html } = this.buildOrganizerApprovalEmailTemplate(
+      organizerName,
+      eventWithParticipants,
+    );
 
-      await emailService.sendMail(participant.email, subject, text, html);
-    }
+    await emailService.sendMail(organizerEmail, subject, text, html);
   }
 
   async createEvent(eventData) {
