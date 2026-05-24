@@ -49,36 +49,168 @@ class AuthService {
       const displayName = user.fullName || user.email;
 
       // Do not block registration success on email provider latency/failure.
-      setImmediate(() => {
-        emailService
-          .sendMail(
-            user.email,
-            `Welcome to Endura Events, ${displayName}!`,
-            `Welcome to Endura Events! We are excited to have you as a ${user.role}.`,
-            `
-  <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;">
-    <h2 style="color: #333; text-align: center;">Welcome Aboard, ${displayName}! 🎉</h2>
-    <p style="font-size: 16px; color: #555; line-height: 1.5;">
-      Thank you for joining <strong>Endura Events</strong>. We are absolutely thrilled to have you onboard as an <strong>${user.role}</strong>.
-    </p>
-    <p style="font-size: 16px; color: #555; line-height: 1.5;">
-      Our platform is built to make event management and participation seamless for you. Log in to your dashboard to get started!
-    </p>
+      //     setImmediate(() => {
+      //       emailService
+      //         .sendMail(
+      //           user.email,
+      //           `Welcome to Endura Events, ${displayName}!`,
+      //           `Welcome to Endura Events! We are excited to have you as a ${user.role}.`,
+      //           `
+      // <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0;">
+      //   <h2 style="color: #333; text-align: center;">Welcome Aboard, ${displayName}! 🎉</h2>
+      //   <p style="font-size: 16px; color: #555; line-height: 1.5;">
+      //     Thank you for joining <strong>Endura Events</strong>. We are absolutely thrilled to have you onboard as an <strong>${user.role}</strong>.
+      //   </p>
+      //   <p style="font-size: 16px; color: #555; line-height: 1.5;">
+      //     Our platform is built to make event management and participation seamless for you. Log in to your dashboard to get started!
+      //   </p>
 
-    <hr style="border: 0; border-top: 1px solid #eee;" />
-    <p style="font-size: 12px; color: #999; text-align: center;">
-      © 2026 Endura Events. All rights reserved. <br/>
-      If you have any questions, feel free to contact our support team.
-    </p>
+      //   <hr style="border: 0; border-top: 1px solid #eee;" />
+      //   <p style="font-size: 12px; color: #999; text-align: center;">
+      //     © 2026 Endura Events. All rights reserved. <br/>
+      //     If you have any questions, feel free to contact our support team.
+      //   </p>
+      // </div>
+      // `,
+      //         )
+      //         .catch((emailError) => {
+      //           logger.warn(
+      //             `Welcome email failed for ${user.email}: ${emailError.message}`,
+      //           );
+      //         });
+      //     });
+
+      if (user.role === 'ORGANIZER') {
+        setImmediate(() => {
+          emailService
+            .sendMail(
+              user.email,
+              `Welcome to Endura Events, ${displayName}!`,
+              `Welcome to Endura Events! Your organizer account has been successfully created.`,
+              `
+<div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
+  
+  <!-- Header / Logo Area -->
+  <h2 style="color: #1a1a1a; text-align: center; margin-bottom: 20px;">Welcome to Endura Events! 🎉</h2>
+  
+  <p style="font-size: 16px; color: #555; line-height: 1.5;">
+    Hi <strong>${displayName}</strong>,
+  </p>
+  
+  <p style="font-size: 16px; color: #555; line-height: 1.5;">
+    Your organizer account has been successfully created and is currently being prepared for activation. We are thrilled to have you on board!
+  </p>
+
+  <!-- Features Section -->
+  <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; border: 1px solid #eaeaea; margin: 20px 0;">
+    <h3 style="font-size: 16px; color: #222; margin-top: 0;">Through our platform, you'll be able to:</h3>
+    <ul style="font-size: 15px; color: #555; line-height: 1.6; padding-left: 20px; margin-bottom: 0;">
+      <li>Create and manage events</li>
+      <li>Request Payments</li>
+      <li>Track registrations in real time</li>
+      <li>Access participant data</li>
+      <li>Use promo codes</li>
+      <li>Accept online payments</li>
+      <li>Receive event support services</li>
+      <li>Request quotations for bibs, medals, and merchandise</li>
+    </ul>
   </div>
-  `,
-          )
-          .catch((emailError) => {
-            logger.warn(
-              `Welcome email failed for ${user.email}: ${emailError.message}`,
-            );
-          });
-      });
+
+  <!-- Account Details & CTA -->
+  <div style="text-align: center; margin: 25px 0;">
+    <p style="font-size: 15px; color: #555; margin-bottom: 5px;"><strong>Login Email:</strong> ${user.email}</p>
+    <a href="https://enduraevents.com/org" style="display: inline-block; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; font-size: 15px; margin-top: 10px;">Access Organizer Dashboard</a>
+  </div>
+
+  <p style="font-size: 16px; color: #555; line-height: 1.5;">
+    Thank you for choosing Endura Events. We look forward to helping you create an amazing event experience.
+  </p>
+
+  <!-- Closing -->
+  <p style="font-size: 15px; color: #555; line-height: 1.5; margin-top: 25px;">
+    Best regards,<br/>
+    <strong>Endura Sports Limited</strong><br/>
+    <span style="font-size: 13px; color: #777;">Powered by Powerhouse</span>
+  </p>
+
+  <hr style="border: 0; border-top: 1px solid #eee; margin-top: 30px;" />
+  
+  <!-- Footer -->
+  <p style="font-size: 12px; color: #999; text-align: center;">
+    © 2026 Endura Events. All rights reserved. <br/>
+    <a href="https://enduraevents.com" style="color: #007bff; text-decoration: none;">enduraevents.com</a> <br/>
+    If you have any questions, feel free to contact our support team.
+  </p>
+</div>
+`,
+            )
+            .catch((emailError) => {
+              logger.warn(
+                `Welcome email failed for ${user.email}: ${emailError.message}`,
+              );
+            });
+        });
+      }
+
+      if (user.role === 'USER') {
+        const firstName = (displayName || 'User').split(' ')[0];
+        const loginLink = 'https://enduraevents.com/login';
+
+        setImmediate(() => {
+          emailService
+            .sendMail(
+              user.email,
+              'Welcome to Endura Events',
+              `Hi ${firstName},\n\nWelcome to Endura Events.\n\nYour account has been successfully created.\n\nYou can now:\n- Discover upcoming events\n- Register for races online\n- Access training plans\n- Manage your registrations\n- Track your event history\n- Build your athlete profile\n\nYour Account Details\nEmail: ${user.email}\nLogin Here: ${loginLink}\n\nWhether you're preparing for your first 5K or your next marathon, Endura Events is built to support your journey.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`,
+              `
+<div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
+  <p style="font-size: 16px; margin: 0 0 18px 0;">Hi <strong>${firstName}</strong>,</p>
+
+  <p style="font-size: 16px; margin: 0 0 16px 0;">Welcome to <strong>Endura Events</strong>.</p>
+
+  <p style="font-size: 16px; margin: 0 0 16px 0;">Your account has been successfully created.</p>
+
+  <p style="font-size: 16px; margin: 0 0 10px 0;">You can now:</p>
+  <ul style="font-size: 16px; line-height: 1.7; margin-top: 0; padding-left: 22px;">
+    <li>Discover upcoming events</li>
+    <li>Register for races online</li>
+    <li>Access training plans</li>
+    <li>Manage your registrations</li>
+    <li>Track your event history</li>
+    <li>Build your athlete profile</li>
+  </ul>
+
+  <hr style="border: 0; border-top: 1px solid #e6e6e6; margin: 22px 0;" />
+
+  <h3 style="font-size: 20px; margin: 0 0 12px 0;">Your Account Details</h3>
+  <p style="font-size: 16px; margin: 0 0 10px 0;"><strong>Email:</strong> ${user.email}</p>
+  <p style="font-size: 16px; margin: 0 0 20px 0;"><strong>Login Here:</strong> <a href="${loginLink}" style="color: #1d6fd6; text-decoration: none;">${loginLink}</a></p>
+
+  <hr style="border: 0; border-top: 1px solid #e6e6e6; margin: 22px 0;" />
+
+  <p style="font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+    Whether you're preparing for your first 5K or your next marathon, Endura Events is built to support your journey.
+  </p>
+
+  <p style="font-size: 16px; line-height: 1.8; margin: 0;">
+    Best regards,<br/>
+    Endura Sports Limited<br/>
+    Powered by Powerhouse
+  </p>
+
+  <p style="font-size: 16px; margin-top: 18px; margin-bottom: 0;">
+    <a href="https://enduraevents.com" style="color: #1d6fd6; text-decoration: none;">enduraevents.com</a>
+  </p>
+</div>
+`,
+            )
+            .catch((emailError) => {
+              logger.warn(
+                `Welcome email failed for ${user.email}: ${emailError.message}`,
+              );
+            });
+        });
+      }
 
       logger.info(`User registered successfully: ${user.email} (${user.role})`);
       return new AuthResponseDTO(user, tokens);

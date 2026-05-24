@@ -472,6 +472,36 @@ class EventRepository {
     }
   }
 
+  async getEventParticipantsForApproval(eventId) {
+    try {
+      return await prisma.event.findUnique({
+        where: { id: eventId },
+        select: {
+          id: true,
+          title: true,
+          location: true,
+          startAt: true,
+          time: true,
+          registrations: {
+            where: {
+              status: 'CONFIRMED',
+            },
+            select: {
+              email: true,
+              firstName: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      logger.error(
+        `Error fetching event participants for event ${eventId}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
   async deleteEvent(eventId) {
     try {
       return await prisma.$transaction(async (tx) => {
