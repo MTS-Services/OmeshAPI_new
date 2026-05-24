@@ -80,8 +80,6 @@ class RegistrationController {
 
     const worksheet = XLSX.utils.json_to_sheet(rows, {
       header: [
-        // 'registrationId',
-        // 'eventId',
         'eventTitle',
         'firstName',
         'lastName',
@@ -94,6 +92,7 @@ class RegistrationController {
         'createdAt',
       ],
     });
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Registrations');
 
@@ -110,7 +109,8 @@ class RegistrationController {
       'Content-Disposition',
       `attachment; filename="event-registrations-${Date.now()}.xlsx"`,
     );
-    res.send(excelBuffer);
+
+    res.end(excelBuffer);
   });
 }
 

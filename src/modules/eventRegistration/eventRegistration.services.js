@@ -353,8 +353,8 @@ class RegistrationService {
     });
 
     return registrations.map((registration) => ({
-      registrationId: registration.id,
-      eventId: registration.eventId,
+      // registrationId: registration.id,
+      // eventId: registration.eventId,
       eventTitle: registration.event?.title || '',
       firstName: registration.firstName,
       lastName: registration.lastName,
