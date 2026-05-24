@@ -10,6 +10,6 @@ router.post('/', authenticate, controller.eventRegistration);
 router.get('/', authenticate, controller.getEventRegistration);
 router.get('/payment', authenticate, controller.getEventPayment);
 router.get('/export/csv', authenticate, controller.downloadRegistrationCsv);
-router.get('/export/excel', authenticate, controller.downloadRegistrationExcel);
+router.get('/export/excel', controller.downloadRegistrationExcel);
 
 module.exports = router;
