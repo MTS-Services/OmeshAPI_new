@@ -43,6 +43,7 @@ app.use(
             'http://localhost:5174',
             'http://localhost:3000',
             'https://omesh.maktechgroup.tech',
+            'https://enduraevents.com',
             'http://localhost:3001',
           ],
     credentials: true,
