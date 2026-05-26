@@ -8,8 +8,18 @@ class PaymentController {
 
   paymentCapture = asyncHandler(async (req, res) => {
     const { paypalOrderId } = req.body;
-    const result = await this.services.capturePayment(paypalOrderId);
+    const result = await this.services.capturePaypalPayment(paypalOrderId);
     res.sendCreated(result, 'Payout requested successfully');
+  });
+
+  fygaroPaymentCapture = asyncHandler(async (req, res) => {
+    const { batchId, providerRef, status, transactionId } = req.body;
+    const result = await this.services.confirmFygaroPayment({
+      batchId,
+      providerRef: providerRef || transactionId,
+      status,
+    });
+    res.sendCreated(result, 'Fygaro payment captured successfully');
   });
 }
 

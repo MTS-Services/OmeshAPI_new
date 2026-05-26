@@ -7,132 +7,176 @@ const logger = require('../../utils/logger');
 
 const PaypalService = new PaymentService();
 
-class RegistrationService {
-  async processRegistration(data, user) {
-    const { eventId, participants, couponCode, platformFee = 0, source } = data;
-    const transactionResult = await prisma.$transaction(async (tx) => {
-      const event = await tx.event.findUnique({ where: { id: eventId } });
-      if (
-        !event ||
-        event.registerClose ||
-        event.availableSeats < participants.length
-      ) {
-        throw new AppError('Registration unavailable or seats full.', 400);
-      }
+const getStoredPaymentMethod = (paymentMethod) => {
+  if (paymentMethod === 'FYGARO') {
+    return 'CARD';
+  }
 
-      const batchId = `${source}-${Date.now()}`;
-      let subtotal = Number(event.price) * participants.length;
+  return paymentMethod;
+};
 
-      const tShirtCount = participants.filter((p) => p.buyTShirt).length;
+const createRegistrationTransaction = async ({
+  data,
+  user,
+  paymentMethod = 'PAYPAL',
+}) => {
+  const { eventId, participants, couponCode, platformFee = 0, source } = data;
+  const onlinePaymentMethod = source === 'ONLINE' ? paymentMethod : 'MANUAL';
 
-      if (event.tShirtIncluded && !event.isFree) {
-        subtotal += Number(event.tShirtPrice) * tShirtCount;
-      }
+  const transactionResult = await prisma.$transaction(async (tx) => {
+    const event = await tx.event.findUnique({ where: { id: eventId } });
+    if (
+      !event ||
+      event.registerClose ||
+      event.availableSeats < participants.length
+    ) {
+      throw new AppError('Registration unavailable or seats full.', 400);
+    }
 
-      const platformFeePct = Number(platformFee);
-      const totalAdminFee = (subtotal * platformFeePct) / 100;
-      const total = subtotal + totalAdminFee;
+    const batchId = `${source}-${Date.now()}`;
+    let subtotal = Number(event.price) * participants.length;
 
-      let paymentStatus = 'PENDING';
-      let registrationStatus = 'PENDING_PAYMENT';
+    const tShirtCount = participants.filter((p) => p.buyTShirt).length;
 
-      if (source === 'MANUAL_ADD') {
-        // if (user.role !== 'ORGANIZER')
-        //   throw new AppError('Unauthorized source.', 400);
+    if (event.tShirtIncluded && !event.isFree) {
+      subtotal += Number(event.tShirtPrice) * tShirtCount;
+    }
 
-        const organizer = await tx.organizerProfile.findUnique({
-          where: { userId: event.organizerId },
-        });
-        await tx.organizerProfile.update({
-          where: { userId: event.organizerId },
-          data: {
-            manualBalance: { increment: subtotal },
-            manualCount: { increment: participants.length },
-          },
-        });
+    const platformFeePct = Number(platformFee);
+    const totalAdminFee = (subtotal * platformFeePct) / 100;
 
-        paymentStatus = 'SUCCEEDED';
-        registrationStatus = 'CONFIRMED';
+    let paymentStatus = 'PENDING';
+    let registrationStatus = 'PENDING_PAYMENT';
 
-        await tx.event.update({
-          where: { id: eventId },
-          data: { availableSeats: { decrement: participants.length } },
-        });
-      }
-
-      const payment = await tx.payment.create({
+    if (source === 'MANUAL_ADD') {
+      await tx.organizerProfile.findUnique({
+        where: { userId: event.organizerId },
+      });
+      await tx.organizerProfile.update({
+        where: { userId: event.organizerId },
         data: {
-          batchId,
-          eventId,
-          subtotal: subtotal,
-          processingFee: source === 'MANUAL_ADD' ? 0 : Number(totalAdminFee),
-          total: source === 'ONLINE' ? subtotal + totalAdminFee : totalAdminFee,
-          method: source === 'ONLINE' ? 'PAYPAL' : 'MANUAL',
-          status: paymentStatus,
-          paidAt: source === 'MANUAL_ADD' ? new Date() : null,
+          manualBalance: { increment: subtotal },
+          manualCount: { increment: participants.length },
         },
       });
 
-      await tx.registration.createMany({
-        data: participants.map((p) => ({
-          ...p,
-          eventId,
-          batchId,
-          status: registrationStatus,
-          source: source,
-          couponCode: couponCode,
-          userId:
-            source === 'ONLINE'
-              ? user.id
-              : user.role === 'USER'
-                ? user.id
-                : null,
-          selectedTShirtSize: p.selectedTShirtSize || null,
-          buyTShirt: p.buyTShirt || false,
-        })),
+      paymentStatus = 'SUCCEEDED';
+      registrationStatus = 'CONFIRMED';
+
+      await tx.event.update({
+        where: { id: eventId },
+        data: { availableSeats: { decrement: participants.length } },
       });
+    }
 
-      if (source === 'ONLINE') {
-        const paypalOrder = await PaypalService.createOrder(
-          subtotal + totalAdminFee,
-          batchId,
-        );
+    const payment = await tx.payment.create({
+      data: {
+        batchId,
+        eventId,
+        subtotal: subtotal,
+        processingFee: source === 'MANUAL_ADD' ? 0 : Number(totalAdminFee),
+        total:
+          source === 'ONLINE'
+            ? subtotal + totalAdminFee
+            : Number(totalAdminFee),
+        method:
+          source === 'ONLINE'
+            ? getStoredPaymentMethod(onlinePaymentMethod)
+            : 'MANUAL',
+        status: paymentStatus,
+        paidAt: source === 'MANUAL_ADD' ? new Date() : null,
+      },
+    });
 
+    await tx.registration.createMany({
+      data: participants.map((p) => ({
+        ...p,
+        eventId,
+        batchId,
+        status: registrationStatus,
+        source: source,
+        couponCode: couponCode,
+        userId:
+          source === 'ONLINE' ? user.id : user.role === 'USER' ? user.id : null,
+        selectedTShirtSize: p.selectedTShirtSize || null,
+        buyTShirt: p.buyTShirt || false,
+      })),
+    });
+
+    if (source === 'ONLINE') {
+      const providerOrder = await PaypalService.createOrder(
+        subtotal + totalAdminFee,
+        batchId,
+        onlinePaymentMethod,
+        event.title,
+      );
+
+      if (providerOrder.providerRef) {
         await tx.payment.update({
           where: { id: payment.id },
-          data: { providerRef: paypalOrder.id },
+          data: { providerRef: providerOrder.providerRef },
         });
+      }
 
+      if (onlinePaymentMethod === 'FYGARO') {
         return {
           source,
-          paypalOrderId: paypalOrder.id,
-          approvalUrl: paypalOrder.links.find((l) => l.rel === 'approve').href,
+          batchId,
+          paymentMethod: 'FYGARO',
+          paymentUrl: providerOrder.paymentUrl,
+          fygaroPaymentUrl: providerOrder.paymentUrl,
+          expiresAt: providerOrder.expiresAt,
         };
       }
 
       return {
         source,
-        message: 'Manual registration successful',
-        batchId,
-        notifyPayload:
-          source === 'MANUAL_ADD'
-            ? {
-                payment: {
-                  batchId,
-                  eventName: event.title,
-                },
-                registrations: participants,
-              }
-            : null,
+        paypalOrderId: providerOrder.id,
+        approvalUrl: providerOrder.links.find((link) => link.rel === 'approve')
+          ?.href,
       };
-    });
-
-    if (transactionResult?.notifyPayload) {
-      paymentEmitter.emit('payment.success', transactionResult.notifyPayload);
     }
 
-    const { notifyPayload, ...response } = transactionResult;
-    return response;
+    return {
+      source,
+      message: 'Manual registration successful',
+      batchId,
+      notifyPayload:
+        source === 'MANUAL_ADD'
+          ? {
+              payment: {
+                batchId,
+                eventName: event.title,
+              },
+              registrations: participants,
+            }
+          : null,
+    };
+  });
+
+  if (transactionResult?.notifyPayload) {
+    paymentEmitter.emit('payment.success', transactionResult.notifyPayload);
+  }
+
+  const { notifyPayload, ...response } = transactionResult;
+  return response;
+};
+
+class RegistrationService {
+  async processRegistration(data, user) {
+    return createRegistrationTransaction({
+      data,
+      user,
+      paymentMethod: 'PAYPAL',
+    });
+  }
+
+  async processFygaroRegistration(data, user) {
+    return createRegistrationTransaction({
+      data,
+      user,
+      paymentMethod: 'FYGARO',
+    });
   }
 
   // async processRegistration(data, user) {

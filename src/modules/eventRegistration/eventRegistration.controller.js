@@ -14,8 +14,18 @@ class RegistrationController {
   eventRegistration = asyncHandler(async (req, res) => {
     const user = req.user;
     const dto = new RegistrationDTO(req.body);
+
+    console.log('Received registration request:', user);
+
     const result = await this.services.processRegistration(dto, user);
     res.sendCreated(result, 'Payout requested successfully');
+  });
+
+  fygaroEventRegistration = asyncHandler(async (req, res) => {
+    const user = req.user;
+    const dto = new RegistrationDTO(req.body);
+    const result = await this.services.processFygaroRegistration(dto, user);
+    res.sendCreated(result, 'Fygaro payment created successfully');
   });
 
   getEventRegistration = asyncHandler(async (req, res) => {

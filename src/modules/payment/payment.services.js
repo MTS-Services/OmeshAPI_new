@@ -1,7 +1,16 @@
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 const { prisma } = require('../../config/database');
 const { AppError } = require('../../middlewares/errorHandler');
 const paymentEmitter = require('../../utils/eventEmitter');
+
+const FYGARO_SUCCESS_STATUSES = new Set([
+  'APPROVED',
+  'COMPLETED',
+  'PAID',
+  'SUCCESS',
+  'SUCCEEDED',
+]);
 
 class PaymentService {
   // constructor() {
@@ -16,6 +25,63 @@ class PaymentService {
   }
 
   // test credentials
+
+  normalizePaymentMethod(paymentMethod = 'PAYPAL') {
+    const normalizedMethod = paymentMethod.toUpperCase();
+
+    if (!['PAYPAL', 'FYGARO'].includes(normalizedMethod)) {
+      throw new AppError('Unsupported payment method.', 400);
+    }
+
+    return normalizedMethod;
+  }
+
+  async finalizeSuccessfulPayment(tx, payment, providerRef) {
+    const registrations = await tx.registration.findMany({
+      where: { batchId: payment.batchId },
+    });
+
+    const updatedPayment = await tx.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'SUCCEEDED',
+        paidAt: new Date(),
+        ...(providerRef ? { providerRef } : {}),
+      },
+      include: {
+        event: {
+          select: { organizerId: true },
+        },
+      },
+    });
+
+    await tx.organizerProfile.update({
+      where: { userId: updatedPayment.event.organizerId },
+      data: {
+        availableBalance: { increment: updatedPayment.subtotal },
+      },
+    });
+
+    await tx.registration.updateMany({
+      where: { batchId: payment.batchId },
+      data: { status: 'CONFIRMED' },
+    });
+
+    await tx.event.update({
+      where: { id: payment.eventId },
+      data: { availableSeats: { decrement: registrations.length } },
+    });
+
+    paymentEmitter.emit('payment.success', {
+      payment: updatedPayment,
+      registrations,
+    });
+
+    return {
+      success: true,
+      message: 'Payment confirmed and seats reserved.',
+    };
+  }
 
   async generateAccessToken() {
     const auth = Buffer.from(
@@ -42,7 +108,7 @@ class PaymentService {
     }
   }
 
-  async createOrder(totalAmount, batchId) {
+  async createPaypalOrder(totalAmount, batchId) {
     const accessToken = await this.generateAccessToken();
 
     try {
@@ -85,6 +151,27 @@ class PaymentService {
       );
       throw new Error('Could not create PayPal order');
     }
+  }
+
+  async createOrder(
+    totalAmount,
+    batchId,
+    paymentMethod = 'PAYPAL',
+    eventTitle,
+  ) {
+    const normalizedMethod = this.normalizePaymentMethod(paymentMethod);
+
+    if (normalizedMethod === 'FYGARO') {
+      return this.createFygaroOrder(totalAmount, batchId, eventTitle);
+    }
+
+    const paypalOrder = await this.createPaypalOrder(totalAmount, batchId);
+
+    return {
+      ...paypalOrder,
+      paymentMethod: normalizedMethod,
+      providerRef: paypalOrder.id,
+    };
   }
 
   async handlePaypalCapture(paypalOrderId) {
@@ -221,7 +308,7 @@ class PaymentService {
     }
   }
 
-  async capturePayment(paypalOrderId) {
+  async capturePaypalPayment(paypalOrderId) {
     const payment = await prisma.payment.findFirst({
       where: { providerRef: paypalOrderId },
     });
@@ -254,46 +341,111 @@ class PaymentService {
     }
 
     return await prisma.$transaction(async (tx) => {
-      const updatedPayment = await tx.payment.update({
-        where: { id: payment.id },
-        data: { status: 'SUCCEEDED', paidAt: new Date() },
-        include: {
-          event: {
-            select: { organizerId: true },
-          },
+      return this.finalizeSuccessfulPayment(
+        tx,
+        payment,
+        capture.id || paypalOrderId,
+      );
+    });
+  }
+
+  async confirmFygaroPayment({ batchId, providerRef, status }) {
+    if (!batchId) {
+      throw new AppError('batchId is required for Fygaro confirmation.', 400);
+    }
+
+    if (status && !FYGARO_SUCCESS_STATUSES.has(status.toUpperCase())) {
+      throw new AppError('Fygaro payment is not marked as successful.', 400);
+    }
+
+    const payment = await prisma.payment.findUnique({
+      where: { batchId },
+    });
+
+    if (!payment || payment.status === 'SUCCEEDED') {
+      throw new AppError('Payment already processed or not found.', 400);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      return this.finalizeSuccessfulPayment(
+        tx,
+        payment,
+        providerRef || payment.providerRef || batchId,
+      );
+    });
+  }
+
+  async capturePayment({
+    batchId,
+    paymentMethod = 'PAYPAL',
+    providerRef,
+    status,
+  }) {
+    const normalizedMethod = this.normalizePaymentMethod(paymentMethod);
+
+    if (normalizedMethod === 'FYGARO') {
+      return this.confirmFygaroPayment({ batchId, providerRef, status });
+    }
+
+    if (!providerRef) {
+      throw new AppError('providerRef is required for PayPal capture.', 400);
+    }
+
+    return this.capturePaypalPayment(providerRef);
+  }
+
+  async createFygaroOrder(totalAmount, batchId, eventTitle) {
+    try {
+      if (
+        !process.env.FYGARO_SECRET_KEY ||
+        !process.env.FYGARO_PUBLIC_KEY ||
+        !process.env.FYGARO_BASE_URL
+      ) {
+        throw new AppError('Fygaro credentials are not configured.', 500);
+      }
+
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+      const expireInSeconds = nowInSeconds + 10 * 60;
+
+      const payload = {
+        amount: parseFloat(totalAmount).toFixed(2),
+        currency: 'USD',
+        custom_reference: batchId,
+        return_url: `${process.env.FRONTEND_URL}/payment-success?batchId=${batchId}&eventName=${encodeURIComponent(eventTitle)}`,
+        cancel_url: `${process.env.FRONTEND_URL}/payment-failed`,
+        nbf: nowInSeconds,
+        exp: expireInSeconds,
+      };
+
+      const options = {
+        algorithm: 'HS256',
+        header: {
+          alg: 'HS256',
+          typ: 'JWT',
+          kid: process.env.FYGARO_PUBLIC_KEY,
         },
-      });
-      const registrations = await tx.registration.findMany({
-        where: { batchId: payment.batchId },
-      });
-
-      await tx.organizerProfile.update({
-        where: { userId: updatedPayment.event.organizerId },
-        data: {
-          availableBalance: { increment: updatedPayment.subtotal },
-        },
-      });
-
-      await tx.registration.updateMany({
-        where: { batchId: payment.batchId },
-        data: { status: 'CONFIRMED' },
-      });
-
-      await tx.event.update({
-        where: { id: payment.eventId },
-        data: { availableSeats: { decrement: registrations.length } },
-      });
-
-      paymentEmitter.emit('payment.success', {
-        payment: payment,
-        registrations,
-      });
+      };
+      const token = jwt.sign(payload, process.env.FYGARO_SECRET_KEY, options);
+      const paymentUrl = `${process.env.FYGARO_BASE_URL}?jwt=${token}`;
 
       return {
-        success: true,
-        message: 'Payment confirmed and seats reserved.',
+        batchId,
+        paymentMethod: 'FYGARO',
+        paymentUrl,
+        expiresAt: new Date(expireInSeconds * 1000).toISOString(),
       };
-    });
+    } catch (error) {
+      console.error(
+        'Fygaro Create Order Error:',
+        error.response?.data || error.message,
+      );
+
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      throw new Error('Could not create Fygaro order');
+    }
   }
 }
 

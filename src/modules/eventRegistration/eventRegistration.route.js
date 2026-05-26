@@ -6,6 +6,7 @@ const router = express.Router();
 const controller = new RegistrationController();
 
 // Organizer routes
+router.post('/fygaro-payment', authenticate, controller.fygaroEventRegistration);
 router.post('/', authenticate, controller.eventRegistration);
 router.get('/', authenticate, controller.getEventRegistration);
 router.get('/payment', authenticate, controller.getEventPayment);
