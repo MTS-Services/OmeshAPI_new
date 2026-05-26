@@ -5,6 +5,7 @@ const router = express.Router();
 
 const controller = new DashboardController();
 
+
 router.get('/admin-stats', authenticate, controller.dashboardAdminStats);
 router.get(
   '/admin-sales-count',
