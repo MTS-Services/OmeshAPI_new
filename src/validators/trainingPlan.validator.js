@@ -7,7 +7,7 @@ const Joi = require('joi');
 
 const TrainingPlanSchema = Joi.object({
   categoryId: Joi.string().required(), // e.g., 'FIVE_K', 'TEN_K'
-  durationMin: Joi.number().required(),
+  durationMin: Joi.string().required(),
   title: Joi.string().min(5).max(100).required(),
   description: Joi.string().required(),
   isActive: Joi.boolean().default(true),
@@ -28,7 +28,7 @@ const TrainingPlanSchema = Joi.object({
 
 const UpdateTrainingPlanSchema = Joi.object({
   categoryId: Joi.string().optional(),
-  durationMin: Joi.number().optional(),
+  durationMin: Joi.string().optional(),
 
   title: Joi.string().min(5).max(100).optional(),
   description: Joi.string().optional(),
