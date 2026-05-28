@@ -6,7 +6,7 @@
 export class CreateTrainingPlanDTO {
   constructor(data) {
     this.categoryId = data.categoryId;
-    this.durationMin = data.durationMin ? Number(data.durationMin) : 0;
+    this.durationMin = data.durationMin;
     this.title = data.title;
     this.description = data.description;
     this.isActive = data.isActive ?? true;
@@ -48,8 +48,7 @@ export class filterTrainingDTO {
 export class UpdateTrainingPlanDTO {
   constructor(data) {
     if (data.categoryId !== undefined) this.categoryId = data.categoryId;
-    if (data.durationMin !== undefined)
-      this.durationMin = Number(data.durationMin);
+    if (data.durationMin !== undefined) this.durationMin = data.durationMin;
     if (data.title !== undefined) this.title = data.title;
     if (data.description !== undefined) this.description = data.description;
     if (data.isActive !== undefined) this.isActive = data.isActive;
