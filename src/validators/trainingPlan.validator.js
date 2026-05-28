@@ -28,7 +28,7 @@ const TrainingPlanSchema = Joi.object({
 
 const UpdateTrainingPlanSchema = Joi.object({
   categoryId: Joi.string().optional(),
-  durationMin: Joi.number().valid(25, 30, 35, 40, 50, 60).optional(),
+  durationMin: Joi.number().optional(),
 
   title: Joi.string().min(5).max(100).optional(),
   description: Joi.string().optional(),
