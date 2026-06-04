@@ -140,10 +140,7 @@ paymentEmitter.on('payment.success', async (data) => {
             payment?.paidAt ||
             payment?.updatedAt,
         );
-        const companyTradeName =
-          orderEmailData?.companyTradeName ||
-          eventDetails.companyTradeName ||
-          'Endura Sports Limited';
+        const companyTradeName = 'Endura Sports Limited';
         const cardType = orderEmailData?.cardType || payment?.method || 'N/A';
         const transactionAmount = formatAmount(
           orderEmailData?.transactionAmount || payment?.total,
