@@ -13,11 +13,30 @@ class PaymentController {
   });
 
   fygaroPaymentCapture = asyncHandler(async (req, res) => {
-    const { batchId, providerRef, status, transactionId } = req.body;
+    const {
+      batchId,
+      providerRef,
+      status,
+      transactionId,
+      cardType,
+      companyTradeName,
+      transactionAmount,
+      currency,
+      orderNumber,
+      serviceDescription,
+      processingDate,
+    } = req.body;
     const result = await this.services.confirmFygaroPayment({
       batchId,
       providerRef: providerRef || transactionId,
       status,
+      cardType,
+      companyTradeName,
+      transactionAmount,
+      currency,
+      orderNumber,
+      serviceDescription,
+      processingDate,
     });
     res.sendCreated(result, 'Fygaro payment captured successfully');
   });

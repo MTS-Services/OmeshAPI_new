@@ -36,7 +36,12 @@ class PaymentService {
     return normalizedMethod;
   }
 
-  async finalizeSuccessfulPayment(tx, payment, providerRef) {
+  async finalizeSuccessfulPayment(
+    tx,
+    payment,
+    providerRef,
+    orderEmailData = {},
+  ) {
     const registrations = await tx.registration.findMany({
       where: { batchId: payment.batchId },
     });
@@ -75,6 +80,7 @@ class PaymentService {
     paymentEmitter.emit('payment.success', {
       payment: updatedPayment,
       registrations,
+      orderEmailData,
     });
 
     return {
@@ -340,16 +346,58 @@ class PaymentService {
       throw new AppError('Payment capture failed.', 400);
     }
 
+    const purchaseUnit = capture.purchase_units?.[0] || {};
+    const capturedPayment = purchaseUnit.payments?.captures?.[0] || {};
+    const cardSource =
+      capture.payment_source?.card ||
+      capture.payment_source?.paypal?.card ||
+      {};
+
+    const orderEmailData = {
+      processingDate:
+        capturedPayment.create_time ||
+        capture.create_time ||
+        new Date().toISOString(),
+      companyTradeName:
+        purchaseUnit.payee?.display_data?.brand_name ||
+        purchaseUnit.payee?.business_name ||
+        'Endura Sports Limited',
+      cardType: cardSource.brand || payment.method || 'PAYPAL',
+      transactionAmount:
+        capturedPayment.amount?.value || purchaseUnit.amount?.value,
+      currency:
+        capturedPayment.amount?.currency_code ||
+        purchaseUnit.amount?.currency_code ||
+        payment.currency,
+      orderNumber:
+        capture.id || paypalOrderId || payment.providerRef || payment.batchId,
+      serviceDescription:
+        purchaseUnit.description ||
+        `Event Registration Batch: ${payment.batchId}`,
+    };
+
     return await prisma.$transaction(async (tx) => {
       return this.finalizeSuccessfulPayment(
         tx,
         payment,
         capture.id || paypalOrderId,
+        orderEmailData,
       );
     });
   }
 
-  async confirmFygaroPayment({ batchId, providerRef, status }) {
+  async confirmFygaroPayment({
+    batchId,
+    providerRef,
+    status,
+    cardType,
+    companyTradeName,
+    transactionAmount,
+    currency,
+    orderNumber,
+    serviceDescription,
+    processingDate,
+  }) {
     if (!batchId) {
       throw new AppError('batchId is required for Fygaro confirmation.', 400);
     }
@@ -366,11 +414,24 @@ class PaymentService {
       throw new AppError('Payment already processed or not found.', 400);
     }
 
+    const orderEmailData = {
+      processingDate: processingDate || new Date().toISOString(),
+      companyTradeName: companyTradeName || 'Endura Sports Limited',
+      cardType: cardType || 'CARD',
+      transactionAmount: transactionAmount || payment.total,
+      currency: currency || payment.currency,
+      orderNumber:
+        orderNumber || providerRef || payment.providerRef || payment.batchId,
+      serviceDescription:
+        serviceDescription || `Event Registration Batch: ${payment.batchId}`,
+    };
+
     return prisma.$transaction(async (tx) => {
       return this.finalizeSuccessfulPayment(
         tx,
         payment,
         providerRef || payment.providerRef || batchId,
+        orderEmailData,
       );
     });
   }

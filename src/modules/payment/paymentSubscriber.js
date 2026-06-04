@@ -4,6 +4,35 @@ const { prisma } = require('../../config/database');
 
 const emailService = new EmailService();
 
+const formatProcessingDate = (value) => {
+  if (!value) {
+    return 'N/A';
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return 'N/A';
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(parsed);
+};
+
+const formatAmount = (amount) => {
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount)) {
+    return 'N/A';
+  }
+
+  return numericAmount.toFixed(2);
+};
+
 const formatStartAt = (startAt) => {
   if (!startAt) {
     return { date: '', time: '' };
@@ -63,6 +92,15 @@ const getEventDetails = async (payment) => {
       location: true,
       startAt: true,
       time: true,
+      organizer: {
+        select: {
+          organizerProfile: {
+            select: {
+              organizationName: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -73,11 +111,14 @@ const getEventDetails = async (payment) => {
     location: event?.location || 'TBA',
     date: formattedStartAt.date || 'TBA',
     time: formattedStartAt.time || event?.time || 'TBA',
+    companyTradeName:
+      event?.organizer?.organizerProfile?.organizationName ||
+      'Endura Sports Limited',
   };
 };
 
 paymentEmitter.on('payment.success', async (data) => {
-  const { payment, registrations } = data;
+  const { payment, registrations, orderEmailData } = data;
 
   try {
     const eventDetails = await getEventDetails(payment);
@@ -94,11 +135,34 @@ paymentEmitter.on('payment.success', async (data) => {
           'Participant';
         const firstName =
           reg.firstName || userName.split(' ')[0] || 'Participant';
+        const processingDate = formatProcessingDate(
+          orderEmailData?.processingDate ||
+            payment?.paidAt ||
+            payment?.updatedAt,
+        );
+        const companyTradeName =
+          orderEmailData?.companyTradeName ||
+          eventDetails.companyTradeName ||
+          'Endura Sports Limited';
+        const cardType = orderEmailData?.cardType || payment?.method || 'N/A';
+        const transactionAmount = formatAmount(
+          orderEmailData?.transactionAmount || payment?.total,
+        );
+        const currency = orderEmailData?.currency || payment?.currency || 'USD';
+        const orderNumber =
+          orderEmailData?.orderNumber ||
+          payment?.providerRef ||
+          payment?.batchId ||
+          'N/A';
+        const serviceDescription =
+          orderEmailData?.serviceDescription ||
+          eventDetails.name ||
+          `Event Registration Batch: ${payment?.batchId || 'N/A'}`;
 
         await emailService.sendMail(
           reg.email,
           `Registration Confirmed: ${eventDetails.name}`,
-          `Hi ${firstName},\n\nYour registration for ${eventDetails.name} has been successfully confirmed.\n\nThank you for registering through Endura Events.\n\nEvent Details\nLocation: ${eventDetails.location}\nDate: ${eventDetails.date}\nTime: ${eventDetails.time}\n\nYour bib collection details and any additional event updates will be shared closer to race day.\n\nPlease ensure that you:\n* Arrive early on event day\n* Stay hydrated\n* Follow all event instructions from organizers and marshals\n\nWe're excited to have you on the start line and appreciate your support.\n\nSee you on race day.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`,
+          `Hi ${firstName},\n\nYour registration for ${eventDetails.name} has been successfully confirmed.\n\nThank you for registering through Endura Events.\n\nEvent Details\nLocation: ${eventDetails.location}\nDate: ${eventDetails.date}\nTime: ${eventDetails.time}\n\nOrder Information\nProcessing Date: ${processingDate}\nCompany Trade Name: ${companyTradeName}\nCard Type: ${cardType}\nTransaction Amount & Currency: ${transactionAmount} ${currency}\nOrder Number: ${orderNumber}\nDescription of the Service/Event: ${serviceDescription}\n\nYour bib collection details and any additional event updates will be shared closer to race day.\n\nPlease ensure that you:\n* Arrive early on event day\n* Stay hydrated\n* Follow all event instructions from organizers and marshals\n\nWe're excited to have you on the start line and appreciate your support.\n\nSee you on race day.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`,
           `
           <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; max-width: 620px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
             <p style="font-size: 16px; margin: 0 0 18px 0;">Hi <strong>${firstName}</strong>,</p>
@@ -113,6 +177,14 @@ paymentEmitter.on('payment.success', async (data) => {
             <p style="font-size: 16px; margin: 0 0 6px 0;">📍 Location: ${eventDetails.location}</p>
             <p style="font-size: 16px; margin: 0 0 6px 0;">🗓️ Date: ${eventDetails.date}</p>
             <p style="font-size: 16px; margin: 0 0 18px 0;">⏰ Time: ${eventDetails.time}</p>
+
+            <p style="font-size: 16px; margin: 0 0 8px 0;"><strong>Order Information</strong></p>
+            <p style="font-size: 16px; margin: 0 0 6px 0;">Processing Date: ${processingDate}</p>
+            <p style="font-size: 16px; margin: 0 0 6px 0;">Company Trade Name: ${companyTradeName}</p>
+            <p style="font-size: 16px; margin: 0 0 6px 0;">Card Type: ${cardType}</p>
+            <p style="font-size: 16px; margin: 0 0 6px 0;">Transaction Amount &amp; Currency: ${transactionAmount} ${currency}</p>
+            <p style="font-size: 16px; margin: 0 0 6px 0;">Order Number: ${orderNumber}</p>
+            <p style="font-size: 16px; margin: 0 0 18px 0;">Description of the Service/Event: ${serviceDescription}</p>
 
             <p style="font-size: 16px; margin: 0 0 16px 0;">
               Your bib collection details and any additional event updates will be shared closer to race day.
