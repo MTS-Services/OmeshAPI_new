@@ -361,7 +361,7 @@ class PaymentService {
       companyTradeName:
         purchaseUnit.payee?.display_data?.brand_name ||
         purchaseUnit.payee?.business_name ||
-        'Endura Sports Limited',
+        'Endura Sports Limited Traded as Endura Events.',
       cardType: cardSource.brand || payment.method || 'PAYPAL',
       transactionAmount:
         capturedPayment.amount?.value || purchaseUnit.amount?.value,
@@ -416,7 +416,8 @@ class PaymentService {
 
     const orderEmailData = {
       processingDate: processingDate || new Date().toISOString(),
-      companyTradeName: companyTradeName || 'Endura Sports Limited',
+      companyTradeName:
+        companyTradeName || 'Endura Sports Limited Traded as Endura Events.',
       cardType: cardType || 'CARD',
       transactionAmount: transactionAmount || payment.total,
       currency: currency || payment.currency,

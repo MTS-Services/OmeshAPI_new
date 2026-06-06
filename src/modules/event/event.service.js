@@ -48,7 +48,7 @@ class EventService {
     const eventTime = this.formatEventTime(event.startAt, event.time);
 
     const subject = `Registration Confirmed: ${event.title}`;
-    const text = `Hi ${participantName},\n\nYour registration for ${event.title} has been successfully confirmed.\n\nThank you for registering through Endura Events.\n\nEvent Details\nLocation: ${location}\nDate: ${eventDate}\nTime: ${eventTime}\n\nYour bib collection details and any additional event updates will be shared closer to race day.\n\nPlease ensure that you:\n* Arrive early on event day\n* Stay hydrated\n* Follow all event instructions from organizers and marshals\n\nWe're excited to have you on the start line and appreciate your support.\n\nSee you on race day.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`;
+    const text = `Hi ${participantName},\n\nYour registration for ${event.title} has been successfully confirmed.\n\nThank you for registering through Endura Events.\n\nEvent Details\nLocation: ${location}\nDate: ${eventDate}\nTime: ${eventTime}\n\nYour bib collection details and any additional event updates will be shared closer to race day.\n\nPlease ensure that you:\n* Arrive early on event day\n* Stay hydrated\n* Follow all event instructions from organizers and marshals\n\nWe're excited to have you on the start line and appreciate your support.\n\nSee you on race day.\n\nBest regards,\nEndura Sports Limited Traded as Endura Events.\nPowered by Powerhouse\nenduraevents.com`;
     const html = `
       <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; max-width: 620px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
         <p style="font-size: 16px; margin: 0 0 18px 0;">Hi <strong>${participantName}</strong>,</p>
@@ -77,7 +77,7 @@ class EventService {
 
         <p style="font-size: 16px; line-height: 1.7; margin: 0;">
           Best regards,<br/>
-          Endura Sports Limited<br/>
+          Endura Sports Limited Traded as Endura Events.<br/>
           Powered by Powerhouse
         </p>
 
@@ -94,7 +94,7 @@ class EventService {
     const eventTime = this.formatEventTime(event.startAt, event.time);
 
     const subject = `Event Approved: ${event.title}`;
-    const text = `Hi ${organizerName},\n\nGreat news. Your event ${event.title} has been approved by admin.\n\nEvent Details\nLocation: ${location}\nDate: ${eventDate}\nTime: ${eventTime}\n\nYou can now manage your event from your organizer dashboard and follow participant registrations.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`;
+    const text = `Hi ${organizerName},\n\nGreat news. Your event ${event.title} has been approved by admin.\n\nEvent Details\nLocation: ${location}\nDate: ${eventDate}\nTime: ${eventTime}\n\nYou can now manage your event from your organizer dashboard and follow participant registrations.\n\nBest regards,\nEndura Sports Limited Traded as Endura Events.\nPowered by Powerhouse\nenduraevents.com`;
     const html = `
       <div style="font-family: Arial, sans-serif; padding: 28px; background-color: #f9f9f9; max-width: 620px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
         <p>Hi ${organizerName},</p>
@@ -110,7 +110,7 @@ class EventService {
 
         <p style="margin-top: 20px;">
           Best regards,<br/>
-          Endura Sports Limited<br/>
+          Endura Sports Limited Traded as Endura Events.<br/>
           Powered by Powerhouse<br/>
           <a href="https://enduraevents.com" style="color: #1d6fd6; text-decoration: none;">enduraevents.com</a>
         </p>

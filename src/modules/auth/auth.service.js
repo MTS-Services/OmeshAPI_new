@@ -129,7 +129,7 @@ class AuthService {
   <!-- Closing -->
   <p style="font-size: 15px; color: #555; line-height: 1.5; margin-top: 25px;">
     Best regards,<br/>
-    <strong>Endura Sports Limited</strong><br/>
+    <strong>Endura Sports Limited Traded as Endura Events.</strong><br/>
     <span style="font-size: 13px; color: #777;">Powered by Powerhouse</span>
   </p>
 
@@ -161,7 +161,7 @@ class AuthService {
             .sendMail(
               user.email,
               'Welcome to Endura Events',
-              `Hi ${firstName},\n\nWelcome to Endura Events.\n\nYour account has been successfully created.\n\nYou can now:\n- Discover upcoming events\n- Register for races online\n- Access training plans\n- Manage your registrations\n- Track your event history\n- Build your athlete profile\n\nYour Account Details\nEmail: ${user.email}\nLogin Here: ${loginLink}\n\nWhether you're preparing for your first 5K or your next marathon, Endura Events is built to support your journey.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`,
+              `Hi ${firstName},\n\nWelcome to Endura Events.\n\nYour account has been successfully created.\n\nYou can now:\n- Discover upcoming events\n- Register for races online\n- Access training plans\n- Manage your registrations\n- Track your event history\n- Build your athlete profile\n\nYour Account Details\nEmail: ${user.email}\nLogin Here: ${loginLink}\n\nWhether you're preparing for your first 5K or your next marathon, Endura Events is built to support your journey.\n\nBest regards,\nEndura Sports Limited Traded as Endura Events.\nPowered by Powerhouse\nenduraevents.com`,
               `
 <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
   <p style="font-size: 16px; margin: 0 0 18px 0;">Hi <strong>${firstName}</strong>,</p>
@@ -194,7 +194,7 @@ class AuthService {
 
   <p style="font-size: 16px; line-height: 1.8; margin: 0;">
     Best regards,<br/>
-    Endura Sports Limited<br/>
+    Endura Sports Limited Traded as Endura Events.<br/>
     Powered by Powerhouse
   </p>
 
@@ -418,7 +418,7 @@ class AuthService {
       await emailService.sendMail(
         forgotPasswordDTO.email,
         'Endura Events Password Reset OTP',
-        `Hi ${user.fullName || 'User'},\n\nWe received a request to reset your Endura Events password.\n\nYour OTP code is: ${plainCode}\n\nThis OTP will expire in 60 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`,
+        `Hi ${user.fullName || 'User'},\n\nWe received a request to reset your Endura Events password.\n\nYour OTP code is: ${plainCode}\n\nThis OTP will expire in 60 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nEndura Sports Limited Traded as Endura Events.\nPowered by Powerhouse\nenduraevents.com`,
         `
       <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
         <h2 style="margin-top: 0; margin-bottom: 12px; color: #1a1a1a;">Password Reset OTP</h2>
@@ -442,7 +442,7 @@ class AuthService {
 
         <p style="font-size: 15px; line-height: 1.7; margin: 0;">
           Best regards,<br/>
-          Endura Sports Limited<br/>
+          Endura Sports Limited Traded as Endura Events.<br/>
           Powered by Powerhouse
         </p>
 

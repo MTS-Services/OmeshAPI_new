@@ -113,7 +113,7 @@ const getEventDetails = async (payment) => {
     time: formattedStartAt.time || event?.time || 'TBA',
     companyTradeName:
       event?.organizer?.organizerProfile?.organizationName ||
-      'Endura Sports Limited',
+      'Endura Sports Limited Traded as Endura Events.',
   };
 };
 
@@ -140,7 +140,8 @@ paymentEmitter.on('payment.success', async (data) => {
             payment?.paidAt ||
             payment?.updatedAt,
         );
-        const companyTradeName = 'Endura Sports Limited';
+        const companyTradeName =
+          'Endura Sports Limited Traded as Endura Events.';
         const cardType = orderEmailData?.cardType || payment?.method || 'N/A';
         const transactionAmount = formatAmount(
           orderEmailData?.transactionAmount || payment?.total,
@@ -159,7 +160,7 @@ paymentEmitter.on('payment.success', async (data) => {
         await emailService.sendMail(
           reg.email,
           `Registration Confirmed: ${eventDetails.name}`,
-          `Hi ${firstName},\n\nYour registration for ${eventDetails.name} has been successfully confirmed.\n\nThank you for registering through Endura Events.\n\nEvent Details\nLocation: ${eventDetails.location}\nDate: ${eventDetails.date}\nTime: ${eventDetails.time}\n\nOrder Information\nProcessing Date: ${processingDate}\nCompany Trade Name: ${companyTradeName}\nCard Type: ${cardType}\nTransaction Amount & Currency: ${transactionAmount} ${currency}\nOrder Number: ${orderNumber}\nDescription of the Service/Event: ${serviceDescription}\n\nYour bib collection details and any additional event updates will be shared closer to race day.\n\nPlease ensure that you:\n* Arrive early on event day\n* Stay hydrated\n* Follow all event instructions from organizers and marshals\n\nWe're excited to have you on the start line and appreciate your support.\n\nSee you on race day.\n\nBest regards,\nEndura Sports Limited\nPowered by Powerhouse\nenduraevents.com`,
+          `Hi ${firstName},\n\nYour registration for ${eventDetails.name} has been successfully confirmed.\n\nThank you for registering through Endura Events.\n\nEvent Details\nLocation: ${eventDetails.location}\nDate: ${eventDetails.date}\nTime: ${eventDetails.time}\n\nOrder Information\nProcessing Date: ${processingDate}\nCompany Trade Name: ${companyTradeName}\nCard Type: ${cardType}\nTransaction Amount & Currency: ${transactionAmount} ${currency}\nOrder Number: ${orderNumber}\nDescription of the Service/Event: ${serviceDescription}\n\nYour bib collection details and any additional event updates will be shared closer to race day.\n\nPlease ensure that you:\n* Arrive early on event day\n* Stay hydrated\n* Follow all event instructions from organizers and marshals\n\nWe're excited to have you on the start line and appreciate your support.\n\nSee you on race day.\n\nBest regards,\nEndura Sports Limited Traded as Endura Events.\nPowered by Powerhouse\nenduraevents.com`,
           `
           <div style="font-family: Arial, sans-serif; padding: 30px; background-color: #f9f9f9; max-width: 620px; margin: 0 auto; border: 1px solid #e0e0e0; color: #333;">
             <p style="font-size: 16px; margin: 0 0 18px 0;">Hi <strong>${firstName}</strong>,</p>
@@ -200,7 +201,7 @@ paymentEmitter.on('payment.success', async (data) => {
 
             <p style="font-size: 16px; line-height: 1.8; margin: 0;">
               Best regards,<br/>
-              Endura Sports Limited<br/>
+              Endura Sports Limited Traded as Endura Events.<br/>
               Powered by Powerhouse
             </p>
 
