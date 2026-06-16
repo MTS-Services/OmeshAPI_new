@@ -33,7 +33,7 @@ class PaymentController {
       cardType,
       companyTradeName,
       transactionAmount,
-      currency,
+      currency, 
       orderNumber,
       serviceDescription,
       processingDate,
