@@ -60,6 +60,8 @@ class PaymentService {
       },
     });
 
+    console.log('================Updated Payment========:', updatedPayment);
+
     await tx.organizerProfile.update({
       where: { userId: updatedPayment.event.organizerId },
       data: {
@@ -401,13 +403,19 @@ class PaymentService {
     processingDate,
   }) {
     if (!batchId) {
-      throw new AppError('batchId is required for Fygaro confirmation.', 400);
+      throw new AppError(
+        'batchId (customReference) is required for Fygaro confirmation.',
+        400,
+      );
     }
-
-    if (status && !FYGARO_SUCCESS_STATUSES.has(status.toUpperCase())) {
-      throw new AppError('Fygaro payment is not marked as successful.', 400);
+    if (status && typeof status === 'string') {
+      if (
+        typeof FYGARO_SUCCESS_STATUSES?.has === 'function' &&
+        !FYGARO_SUCCESS_STATUSES.has(status.toUpperCase())
+      ) {
+        throw new AppError('Fygaro payment is not marked as successful.', 400);
+      }
     }
-
     const payment = await prisma.payment.findUnique({
       where: { batchId },
     });

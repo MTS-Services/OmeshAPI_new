@@ -12,32 +12,58 @@ class PaymentController {
     res.sendCreated(result, 'Payout requested successfully');
   });
 
+  // fygaroPaymentCapture = asyncHandler(async (req, res) => {
+  //   const {
+  //     batchId,
+  //     providerRef,
+  //     status,
+  //     transactionId,
+  //     cardType,
+  //     companyTradeName,
+  //     transactionAmount,
+  //     currency,
+  //     orderNumber,
+  //     serviceDescription,
+  //     processingDate,
+  //   } = req.body;
+  //   const result = await this.services.confirmFygaroPayment({
+  //     batchId,
+  //     providerRef: providerRef || transactionId,
+  //     status,
+  //     cardType,
+  //     companyTradeName,
+  //     transactionAmount,
+  //     currency,
+  //     orderNumber,
+  //     serviceDescription,
+  //     processingDate,
+  //   });
+  //   res.sendCreated(result, 'Fygaro payment captured successfully');
+  // });
+
   fygaroPaymentCapture = asyncHandler(async (req, res) => {
     const {
-      batchId,
-      providerRef,
-      status,
       transactionId,
-      cardType,
-      companyTradeName,
-      transactionAmount,
+      reference,
+      customReference,
+      amount,
       currency,
-      orderNumber,
-      serviceDescription,
-      processingDate,
+      card,
     } = req.body;
+
     const result = await this.services.confirmFygaroPayment({
-      batchId,
-      providerRef: providerRef || transactionId,
-      status,
-      cardType,
-      companyTradeName,
-      transactionAmount,
+      batchId: customReference,
+      providerRef: reference || transactionId,
+      status: 'APPROVED',
+      cardType: card?.brand || 'CARD',
+      companyTradeName: null,
+      transactionAmount: amount,
       currency,
-      orderNumber,
-      serviceDescription,
-      processingDate,
+      orderNumber: reference,
+      serviceDescription: null,
+      processingDate: null,
     });
+
     res.sendCreated(result, 'Fygaro payment captured successfully');
   });
 
