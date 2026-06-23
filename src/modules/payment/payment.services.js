@@ -86,6 +86,8 @@ class PaymentService {
     return {
       success: true,
       message: 'Payment confirmed and seats reserved.',
+      payment: updatedPayment,
+      registrations,
     };
   }
 
@@ -508,6 +510,65 @@ class PaymentService {
 
       throw new Error('Could not create Fygaro order');
     }
+  }
+
+  async getConfromPayment(batchId) {
+    const payment = await prisma.payment.findUnique({
+      where: { batchId },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            organizerId: true,
+          },
+        },
+      },
+    });
+
+    if (!payment) {
+      throw new AppError('Payment not found for the provided batchId.', 404);
+    }
+
+    const registrations = await prisma.registration.findMany({
+      where: { batchId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (registrations.length === 0) {
+      throw new AppError(
+        'Registrations not found for the provided batchId.',
+        404,
+      );
+    }
+
+    if (payment.status === 'SUCCEEDED') {
+      return {
+        success: true,
+        message: 'Payment already confirmed.',
+        payment,
+        registrations,
+      };
+    }
+
+    const orderEmailData = {
+      processingDate: new Date().toISOString(),
+      companyTradeName: 'Endura Sports Limited Traded as Endura Events.',
+      cardType: payment.method || 'CARD',
+      transactionAmount: payment.total,
+      currency: payment.currency,
+      orderNumber: payment.providerRef || payment.batchId,
+      serviceDescription: `Event Registration Batch: ${payment.batchId}`,
+    };
+
+    return prisma.$transaction(async (tx) => {
+      return this.finalizeSuccessfulPayment(
+        tx,
+        payment,
+        payment.providerRef || payment.batchId,
+        orderEmailData,
+      );
+    });
   }
 }
 
