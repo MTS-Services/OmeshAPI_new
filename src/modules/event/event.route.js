@@ -40,13 +40,14 @@ router.get(
   authorize(['USER']),
   eventController.getUserBookedEvents,
 );
-router.get('/:id', eventController.getEventById);
 router.get(
   '/revenue/:id',
   authenticate,
   authorize(['ORGANIZER']),
   eventController.getEventByIdWithRevenue,
 );
+router.get('/:id', eventController.getEventById);
+
 router.get('/slug/:slug', eventController.getEventBySlug);
 router.patch(
   '/:id',

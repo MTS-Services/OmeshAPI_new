@@ -305,6 +305,8 @@ class EventRepository {
   }
 
   async getEventRevenue(eventId) {
+    console.log('================Event Revenue========:', eventId);
+
     try {
       const event = await prisma.event.findUnique({
         where: { id: eventId },
@@ -321,7 +323,7 @@ class EventRepository {
               status: 'SUCCEEDED',
             },
             select: {
-              total: true,
+              subtotal: true,
             },
           },
         },
@@ -332,15 +334,18 @@ class EventRepository {
       });
 
       if (!event) return null;
+
       const revenue = event.payments.reduce((sum, payment) => {
-        return sum + Number(payment.total);
+        return sum + Number(payment.subtotal);
       }, 0);
       const { payments, ...eventData } = event;
 
+      console.log('================Event Revenue Result========:', eventData);
+
       return {
         ...eventData,
-        price: Number(eventData.price),
-        revenue: revenue,
+        price: Number(eventData?.price),
+        revenue: revenue ?? 0,
         platformFeePct: Number(platformFee.platformFeePct),
       };
     } catch (error) {
