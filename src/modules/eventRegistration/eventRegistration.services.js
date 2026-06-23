@@ -408,6 +408,7 @@ class RegistrationService {
       selectedTShirtSize: registration.selectedTShirtSize || '',
       status: registration.status,
       source: registration.source,
+      teamClub: registration.teamClub || '',
       createdAt: registration.createdAt.toISOString(),
     }));
   }

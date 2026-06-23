@@ -59,6 +59,7 @@ class RegistrationController {
       'source',
       'couponCode',
       'selectedTShirtSize',
+      'teamClub',
       'createdAt',
     ];
 
@@ -99,6 +100,7 @@ class RegistrationController {
         'source',
         'couponCode',
         'selectedTShirtSize',
+        'teamClub',
         'createdAt',
       ],
     });
