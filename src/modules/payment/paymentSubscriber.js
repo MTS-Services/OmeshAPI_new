@@ -112,8 +112,7 @@ const getEventDetails = async (payment) => {
     date: formattedStartAt.date || 'TBA',
     time: formattedStartAt.time || event?.time || 'TBA',
     companyTradeName:
-      event?.organizer?.organizerProfile?.organizationName ||
-      'Endura Sports Limited Traded as Endura Events.',
+      event?.organizer?.organizerProfile?.organizationName || 'Endura Events.',
   };
 };
 
@@ -140,8 +139,7 @@ paymentEmitter.on('payment.success', async (data) => {
             payment?.paidAt ||
             payment?.updatedAt,
         );
-        const companyTradeName =
-          'Endura Sports Limited Traded as Endura Events.';
+        const companyTradeName = 'Endura Events.';
         const cardType = orderEmailData?.cardType || payment?.method || 'N/A';
         const transactionAmount = formatAmount(
           orderEmailData?.transactionAmount || payment?.total,
@@ -183,21 +181,6 @@ paymentEmitter.on('payment.success', async (data) => {
             <p style="font-size: 16px; margin: 0 0 6px 0;">Transaction Amount &amp; Currency: ${transactionAmount} ${currency}</p>
             <p style="font-size: 16px; margin: 0 0 6px 0;">Order Number: ${orderNumber}</p>
             <p style="font-size: 16px; margin: 0 0 18px 0;">Description of the Service/Event: ${serviceDescription}</p>
-
-            <p style="font-size: 16px; margin: 0 0 16px 0;">
-              Your bib collection details and any additional event updates will be shared closer to race day.
-            </p>
-
-            <p style="font-size: 16px; margin: 0 0 10px 0;">Please ensure that you:</p>
-            <ul style="font-size: 16px; line-height: 1.7; margin-top: 0; padding-left: 22px;">
-              <li>Arrive early on event day</li>
-              <li>Stay hydrated</li>
-              <li>Follow all event instructions from organizers and marshals</li>
-            </ul>
-
-            <p style="font-size: 16px; margin: 0 0 16px 0;">We're excited to have you on the start line and appreciate your support.</p>
-
-            <p style="font-size: 16px; margin: 0 0 20px 0;">See you on race day.</p>
 
             <p style="font-size: 16px; line-height: 1.8; margin: 0;">
               Best regards,<br/>

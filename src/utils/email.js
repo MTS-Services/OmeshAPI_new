@@ -165,7 +165,7 @@ class EmailService {
             {
               From: {
                 Email: process.env.SENDER_EMAIL,
-                Name: 'Endura Sports Limited Traded as Endura Events.',
+                Name: 'Endura Events.',
               },
               To: [
                 {

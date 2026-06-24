@@ -60,8 +60,6 @@ class PaymentService {
       },
     });
 
-    console.log('================Updated Payment========:', updatedPayment);
-
     await tx.organizerProfile.update({
       where: { userId: updatedPayment.event.organizerId },
       data: {
