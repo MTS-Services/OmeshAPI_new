@@ -112,7 +112,8 @@ const getEventDetails = async (payment) => {
     date: formattedStartAt.date || 'TBA',
     time: formattedStartAt.time || event?.time || 'TBA',
     companyTradeName:
-      event?.organizer?.organizerProfile?.organizationName || 'Endura Events.',
+      event?.organizer?.organizerProfile?.organizationName ||
+      'Endura Sports Limited Traded as Endura Events.',
   };
 };
 
@@ -139,7 +140,8 @@ paymentEmitter.on('payment.success', async (data) => {
             payment?.paidAt ||
             payment?.updatedAt,
         );
-        const companyTradeName = 'Endura Events.';
+        const companyTradeName =
+          'Endura Sports Limited Traded as Endura Events.';
         const cardType = orderEmailData?.cardType || payment?.method || 'N/A';
         const transactionAmount = formatAmount(
           orderEmailData?.transactionAmount || payment?.total,
