@@ -62,15 +62,6 @@ class EventService {
         <p style="font-size: 16px; margin: 0 0 6px 0;">🗓️ Date: ${eventDate}</p>
         <p style="font-size: 16px; margin: 0 0 18px 0;">⏰ Time: ${eventTime}</p>
 
-        <p style="font-size: 16px; margin: 0 0 16px 0;">Your bib collection details and any additional event updates will be shared closer to race day.</p>
-
-        <p style="font-size: 16px; margin: 0 0 10px 0;">Please ensure that you:</p>
-        <ul style="font-size: 16px; line-height: 1.7; margin-top: 0; padding-left: 20px;">
-          <li>Arrive early on event day</li>
-          <li>Stay hydrated</li>
-          <li>Follow all event instructions from organizers and marshals</li>
-        </ul>
-
         <p style="font-size: 16px; margin: 0 0 16px 0;">We're excited to have you on the start line and appreciate your support.</p>
 
         <p style="font-size: 16px; margin: 0 0 20px 0;">See you on race day.</p>

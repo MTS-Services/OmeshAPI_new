@@ -1,48 +1,65 @@
 /**
  * Database configuration and Prisma client setup
- * Handles connection, logging, and graceful disconnection
+ * Handles connection, logging, and singleton pattern
  */
-const { PrismaClient } = require("@prisma/client");
-const config = require("./index");
-const logger = require("../utils/logger");
+const { PrismaClient } = require('@prisma/client');
+const config = require('./index');
+const logger = require('../utils/logger');
 
-// Create Prisma client with appropriate logging based on environment
-const prisma = new PrismaClient({
-  log: config.nodeEnv === "development" ? ["warn", "error"] : ["warn", "error"],
-  errorFormat: "minimal",
-});
+const globalForPrisma = globalThis;
 
-// Database connection helper
-const connectDatabase = async () => {
-  try {
-    await prisma.$connect();
-    logger.info("📊 Database connected successfully");
+let prisma;
 
-    // Test the connection
-    await prisma.$queryRaw`SELECT 1`;
-    logger.info("✅ Database connection verified");
+if (!globalForPrisma.prismaGlobal) {
+  globalForPrisma.prismaGlobal = new PrismaClient({
+    log:
+      config.nodeEnv === 'development' ? ['warn', 'error'] : ['warn', 'error'],
+    errorFormat: 'minimal',
+  });
+}
 
-    return prisma;
-  } catch (error) {
-    logger.error("❌ Database connection failed:", error.message);
-    process.exit(1);
+prisma = globalForPrisma.prismaGlobal;
+
+const connectDatabase = async (retries = 5, delay = 5000) => {
+  while (retries > 0) {
+    try {
+      logger.info('🔄 Attempting to connect to the database...');
+      await prisma.$connect();
+      logger.info('📊 Database connected successfully');
+
+      // Test the connection
+      await prisma.$queryRaw`SELECT 1`;
+      logger.info('✅ Database connection verified');
+
+      return prisma;
+    } catch (error) {
+      retries -= 1;
+      logger.error(`❌ Database connection failed: ${error.message}`);
+
+      if (retries === 0) {
+        logger.error('🚫 Max connection retries reached. Exiting process...');
+        process.exit(1);
+      }
+
+      logger.info(
+        `⏳ Retrying connection in ${delay / 1000} seconds... (${retries} attempts left)`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   }
 };
 
-// Graceful disconnection
+/**
+ * Graceful disconnection helper
+ */
 const disconnectDatabase = async () => {
   try {
     await prisma.$disconnect();
-    logger.info("📊 Database disconnected successfully");
+    logger.info('📊 Database disconnected successfully via Prisma');
   } catch (error) {
-    logger.error("❌ Error disconnecting from database:", error.message);
+    logger.error('❌ Error disconnecting from database:', error.message);
   }
 };
-
-// Handle process termination
-process.on("beforeExit", disconnectDatabase);
-process.on("SIGINT", disconnectDatabase);
-process.on("SIGTERM", disconnectDatabase);
 
 module.exports = {
   prisma,

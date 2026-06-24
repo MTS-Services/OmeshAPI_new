@@ -1,9 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
 const { AppError } = require('../../middlewares/errorHandler');
 const PaymentService = require('../payment/payment.services');
 const paymentEmitter = require('../../utils/eventEmitter');
 const logger = require('../../utils/logger');
+const { prisma } = require('../../config/database');
 
 const PaypalService = new PaymentService();
 
