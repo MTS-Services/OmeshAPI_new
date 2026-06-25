@@ -16,6 +16,7 @@ const { responseFormatter } = require('./middlewares/responseFormatter');
 
 // Routes
 const routes = require('./routes');
+const { default: updateExpiredEvents } = require('./utils/cronJobs');
 const app = express();
 const API_PREFIX = '/api/v1';
 
@@ -143,6 +144,8 @@ app.get('/', (req, res) => {
 // API routes
 
 app.use(API_PREFIX, routes);
+
+updateExpiredEvents();
 
 // Catch 404 and forward to error handler
 app.use(notFound);

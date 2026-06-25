@@ -194,7 +194,14 @@ class EventRepository {
       if (!status) {
         whereCondition.push({
           status: {
-            notIn: ['DRAFT', 'PENDING'],
+            notIn: [
+              'DRAFT',
+              'PENDING',
+              'COMPLETED',
+              'REJECTED',
+              'SUSPENDED',
+              'CANCELLED',
+            ],
           },
         });
       } else {
