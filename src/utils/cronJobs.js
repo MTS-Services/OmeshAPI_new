@@ -1,6 +1,5 @@
-import { prisma } from '../config/database';
-
 const cron = require('node-cron');
+const { prisma } = require('../config/database');
 
 const updateExpiredEvents = async () => {
   try {
@@ -33,4 +32,4 @@ cron.schedule('1 0 * * *', () => {
   updateExpiredEvents();
 });
 
-export default updateExpiredEvents;
+module.exports = updateExpiredEvents;
