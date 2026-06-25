@@ -68,6 +68,7 @@ const UpdateEventSchema = Joi.object({
   startAt: Joi.date().iso().optional(),
   endAt: Joi.date().iso().min(Joi.ref('startAt')).allow(null).optional(),
   location: Joi.string().optional(),
+  time: Joi.string().optional(),
   country: Joi.string().optional(),
   distance: Joi.string().allow(null, ''),
   registerClose: Joi.boolean().optional(),

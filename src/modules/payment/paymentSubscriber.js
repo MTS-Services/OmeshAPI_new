@@ -24,6 +24,47 @@ const formatProcessingDate = (value) => {
   }).format(parsed);
 };
 
+const normalizeTimeForInput12Hour = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  if (/[a-zA-Z]/.test(raw)) {
+    return raw;
+  }
+
+  const timeMatch = raw.match(/^(\d{1,2}):(\d{2})/);
+
+  if (timeMatch) {
+    let hours = parseInt(timeMatch[1], 10);
+    const minutes = timeMatch[2].padStart(2, '0');
+
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+
+    const formattedHours = String(hours).padStart(2, '0');
+
+    return `${formattedHours}:${minutes} ${ampm}`;
+  }
+
+  try {
+    const parsed = new Date(raw.includes('T') ? raw : `1970-01-01T${raw}Z`);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'UTC',
+      });
+    }
+  } catch {
+    return '';
+  }
+
+  return '';
+};
+
 const formatAmount = (amount) => {
   const numericAmount = Number(amount);
   if (!Number.isFinite(numericAmount)) {
@@ -44,13 +85,13 @@ const formatStartAt = (startAt) => {
   }
 
   const date = new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     year: 'numeric',
   }).format(parsed);
 
   const time = new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
+    hour: '2-digit',
     minute: '2-digit',
     hour12: true,
   }).format(parsed);
@@ -110,7 +151,9 @@ const getEventDetails = async (payment) => {
     name: event?.title || payment.eventName || 'Event',
     location: event?.location || 'TBA',
     date: formattedStartAt.date || 'TBA',
-    time: formattedStartAt.time || event?.time || 'TBA',
+    time: event?.time
+      ? normalizeTimeForInput12Hour(event?.time)
+      : formattedStartAt.time || 'TBA',
     companyTradeName:
       event?.organizer?.organizerProfile?.organizationName ||
       'Endura Sports Limited Traded as Endura Events.',
@@ -122,6 +165,7 @@ paymentEmitter.on('payment.success', async (data) => {
 
   try {
     const eventDetails = await getEventDetails(payment);
+
     if (Array.isArray(registrations) && registrations.length > 0) {
       for (const reg of registrations) {
         if (!reg?.email) {
