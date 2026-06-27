@@ -348,7 +348,7 @@ class EventRepository {
       return {
         ...eventData,
         price: Number(eventData?.price),
-        revenue: revenue ?? 0,
+        revenue: Number(revenue.toFixed(3)),
         platformFeePct: Number(platformFee.platformFeePct),
       };
     } catch (error) {
