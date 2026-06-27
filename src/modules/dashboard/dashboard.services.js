@@ -373,6 +373,60 @@ class DashboardServices {
       throw error;
     }
   }
+
+  async getOrganizerEarnings(organizerId) {
+    const onlinePayments = await prisma.payment.aggregate({
+      where: {
+        event: {
+          is: {
+            organizerId: organizerId,
+          },
+        },
+        status: 'SUCCEEDED',
+        registrations: {
+          some: {
+            source: 'ONLINE',
+          },
+        },
+      },
+      _sum: {
+        subtotal: true,
+      },
+    });
+
+    const manualPayments = await prisma.payment.aggregate({
+      where: {
+        event: {
+          organizerId: organizerId,
+        },
+        status: 'SUCCEEDED',
+        registrations: {
+          some: {
+            source: 'MANUAL_ADD',
+          },
+        },
+      },
+      _sum: {
+        subtotal: true,
+      },
+    });
+
+    console.log('Online Payments:', onlinePayments);
+    console.log('Manual Payments:', manualPayments);
+
+    return {
+      organizerId,
+      onlineEarnings: onlinePayments._sum.total
+        ? Number(onlinePayments._sum.total)
+        : 0,
+      manualEarnings: manualPayments._sum.total
+        ? Number(manualPayments._sum.total)
+        : 0,
+      totalEarnings:
+        (onlinePayments._sum.total ? Number(onlinePayments._sum.total) : 0) +
+        (manualPayments._sum.total ? Number(manualPayments._sum.total) : 0),
+    };
+  }
 }
 
 module.exports = DashboardServices;

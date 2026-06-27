@@ -5,7 +5,6 @@ const router = express.Router();
 
 const controller = new DashboardController();
 
-
 router.get('/admin-stats', authenticate, controller.dashboardAdminStats);
 router.get(
   '/admin-sales-count',
@@ -31,5 +30,7 @@ router.get(
   authorize(['ORGANIZER']),
   controller.getTopEventsOrganizer,
 );
+
+router.get('/organizer-value-event/:id', controller.getTakaEvent);
 
 module.exports = router;

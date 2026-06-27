@@ -139,7 +139,7 @@ class EventRepository {
       // Execute queries in parallel
       const [rawEvents, total] = await Promise.all([
         prisma.event.findMany({
-          where: finalWhere,
+          where: { ...finalWhere, isDeleted: false },
           include: {
             images: true,
             organizer: {
@@ -157,7 +157,7 @@ class EventRepository {
           skip: offset,
           take: limit,
         }),
-        prisma.event.count({ where: finalWhere }),
+        prisma.event.count({ where: { ...finalWhere, isDeleted: false } }),
       ]);
 
       const events = rawEvents.map((event) => ({
@@ -249,7 +249,7 @@ class EventRepository {
 
       const [rawEvents, total] = await Promise.all([
         prisma.event.findMany({
-          where: finalWhere,
+          where: { ...finalWhere, isDeleted: false },
           include: {
             images: true,
             organizer: {
@@ -265,7 +265,7 @@ class EventRepository {
           skip: offset,
           take: limit,
         }),
-        prisma.event.count({ where: finalWhere }),
+        prisma.event.count({ where: { ...finalWhere, isDeleted: false } }),
       ]);
 
       const events = rawEvents.map((event) => ({
@@ -520,18 +520,19 @@ class EventRepository {
     try {
       return await prisma.$transaction(async (tx) => {
         // 1. Delete dependent payments first
-        await tx.payment.deleteMany({
-          where: { eventId: eventId },
-        });
+        // await tx.payment.deleteMany({
+        //   where: { eventId: eventId },
+        // });
 
         // 2. Delete dependent registrations (uncomment if needed)
-        await tx.registration.deleteMany({
-          where: { eventId: eventId },
-        });
+        // await tx.registration.deleteMany({
+        //   where: { eventId: eventId },
+        // });
 
         // 3. Finally, delete the event
-        return await tx.event.delete({
+        return await tx.event.update({
           where: { id: eventId },
+          data: { isDeleted: true },
         });
       });
     } catch (error) {

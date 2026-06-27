@@ -249,6 +249,7 @@ model Event {
   isFree          Boolean  @default(false)
   tShirtImageUrl  String[]
   promoCode       String?
+  isDeleted       Boolean  @default(false)
 
   // Relations
   organizerId String
@@ -468,7 +469,7 @@ model TrainingPlan {
   id          String               @id @default(cuid())
   categoryId  String
   category    TrainingPlanCategory @relation(fields: [trainingPlanCategoryId], references: [id])
-  durationMin String          
+  durationMin String
   title       String
   description String               @db.Text
   isActive    Boolean              @default(true)

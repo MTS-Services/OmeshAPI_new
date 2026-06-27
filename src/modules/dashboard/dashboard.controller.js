@@ -40,6 +40,12 @@ class DashboardController {
     const result = await this.services.getTopEvents(range, userId);
     res.sendCreated(result, 'Get Data Successfully');
   });
+
+  getTakaEvent = asyncHandler(async (req, res) => {
+    const eventId = req.params.id;
+    const result = await this.services.getOrganizerEarnings(eventId);
+    res.sendSuccess(result, 'event delete successfully');
+  });
 }
 
 module.exports = DashboardController;
