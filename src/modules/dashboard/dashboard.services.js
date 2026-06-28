@@ -427,6 +427,64 @@ class DashboardServices {
         (manualPayments._sum.total ? Number(manualPayments._sum.total) : 0),
     };
   }
+
+  async getOrganizerData(filterDTO) {
+    const { sortBy, sortOrder, search, limit, role = 'ORGANIZER' } = filterDTO;
+    const offset = filterDTO.getOffset();
+    const whereCondition = [];
+
+    if (search) {
+      whereCondition.push({
+        OR: [
+          { fullName: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (role) {
+      whereCondition.push({ role });
+    }
+
+    const finalWhere = whereCondition.length > 0 ? { AND: whereCondition } : {};
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where: { ...finalWhere, isDeleted: false },
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          _count: {
+            select: {
+              organizedEvents: {
+                where: { isDeleted: false },
+              },
+            },
+          },
+        },
+        skip: offset,
+        take: limit,
+      }),
+      prisma.user.count({ where: { ...finalWhere, isDeleted: false } }),
+    ]);
+
+    const formattedUsers = users.map((u) => ({
+      ...u,
+      totalEvents: u._count.organizedEvents,
+    }));
+
+    return {
+      users: formattedUsers,
+      pagination: {
+        currentPage: filterDTO.page,
+        itemsPerPage: filterDTO.limit,
+        totalItems: total,
+        totalPages: Math.ceil(total / filterDTO.limit),
+        hasNextPage: filterDTO.page < Math.ceil(total / filterDTO.limit),
+        hasPreviousPage: filterDTO.page > 1,
+      },
+    };
+  }
 }
 
 module.exports = DashboardServices;

@@ -32,5 +32,6 @@ router.get(
 );
 
 router.get('/organizer-value-event/:id', controller.getTakaEvent);
+router.get('/users', controller.getUsers);
 
 module.exports = router;

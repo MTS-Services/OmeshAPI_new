@@ -197,10 +197,10 @@ class UserService {
   async deleteUser(id) {
     try {
       // Check if user exists
-      const user = await this.userRepository.getUserById(id);
-      if (!user) {
-        throw new AppError('User not found', 404);
-      }
+      // const user = await this.userRepository.getUserById(id);
+      // if (!user) {
+      //   throw new AppError('User not found', 404);
+      // }
 
       // Prevent self-deletion if needed
       // This check would need to be done in the controller with req.user.id

@@ -1,4 +1,5 @@
 const { asyncHandler } = require('../../middlewares/errorHandler');
+const { filterUserDTO } = require('./dashboard.dto');
 
 const DashboardServices = require('./dashboard.services');
 
@@ -45,6 +46,16 @@ class DashboardController {
     const eventId = req.params.id;
     const result = await this.services.getOrganizerEarnings(eventId);
     res.sendSuccess(result, 'event delete successfully');
+  });
+
+  getUsers = asyncHandler(async (req, res) => {
+    const filterDTO = new filterUserDTO(req.query);
+    const result = await this.services.getOrganizerData(filterDTO);
+    res.sendSuccess(
+      result.users,
+      'event delete successfully',
+      result.pagination,
+    );
   });
 }
 

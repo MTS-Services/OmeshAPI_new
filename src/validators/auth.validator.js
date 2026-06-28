@@ -50,6 +50,7 @@ const registerSchema = Joi.object({
   dateOfBirth: Joi.date().max('now').optional(),
   location: Joi.string().max(200).trim().optional(),
   teamClub: Joi.string().max(200).trim().optional(),
+  avatarUrl: Joi.string().trim().optional(),
 });
 
 /**
@@ -116,7 +117,7 @@ const updateProfileSchema = Joi.object({
 
   phone: Joi.string().min(7).max(20).trim().allow(null).empty('').optional(),
 
-  avatarUrl: Joi.string().uri().trim().allow(null).empty('').optional(),
+  avatarUrl: Joi.string().trim().allow(null).empty('').optional(),
 
   gender: Joi.string().valid('MALE', 'FEMALE', 'OTHER').optional(),
 

@@ -36,6 +36,8 @@ class AuthService {
       );
       userData.passwordHash = hashedPassword;
 
+      console.log('===============================:', userData);
+
       const user = await this.authRepository.createUser(userData);
       const tokens = generateTokenPair(user);
 
@@ -228,6 +230,10 @@ class AuthService {
       );
       if (!user) {
         throw new AppError('Invalid email or password', 401);
+      }
+
+      if (user.isDeleted) {
+        throw new AppError('Account has been deleted', 403);
       }
 
       const isPasswordValid = await bcrypt.compare(

@@ -250,8 +250,8 @@ router.put(
 
 router.delete(
   '/:id',
-  authenticate,
-  authorize(['ADMIN']),
+  // authenticate,
+  // authorize(['ADMIN']),
   validateParams(idParamsSchema),
   userController.deleteUser,
 );

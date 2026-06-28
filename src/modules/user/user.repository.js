@@ -367,9 +367,9 @@ class UserRepository {
    */
   async deleteUser(id) {
     try {
-      // Note: Cascade deletes will handle related records
-      await prisma.user.delete({
-        where: { id },
+      await prisma.user.update({
+        where: { id: id },
+        data: { isDeleted: true },
       });
 
       logger.info(`User deleted by admin: ${id}`);

@@ -137,6 +137,7 @@ model User {
   dateOfBirth DateTime?
   location    String?
   teamClub    String?
+  isDeleted   Boolean   @default(false)
 
   // Relations
   organizerProfile    OrganizerProfile?

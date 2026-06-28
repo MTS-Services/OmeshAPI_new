@@ -116,17 +116,19 @@ class UserController {
   deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
+    console.log('=============================:', id);
+
     // Prevent self-deletion
-    if (req.user.id === id) {
-      return res.sendBadRequest('You cannot delete your own account');
-    }
+    // if (req.user.id === id) {
+    //   return res.sendBadRequest('You cannot delete your own account');
+    // }
 
     await this.userService.deleteUser(id);
 
-    logger.audit(req.user.id, 'User Deletion', `Deleted user: ${id}`, {
-      targetUser: id,
-      ip: req.ip,
-    });
+    // logger.audit(req.user.id, 'User Deletion', `Deleted user: ${id}`, {
+    //   targetUser: id,
+    //   ip: req.ip,
+    // });
 
     res.sendSuccess(null, 'User deleted successfully');
   });

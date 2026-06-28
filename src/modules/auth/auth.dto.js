@@ -17,6 +17,7 @@ class RegisterDTO {
     this.dateOfBirth = data.dateOfBirth;
     this.location = data.location;
     this.teamClub = data.teamClub;
+    this.avatarUrl = data.avatarUrl;
   }
 
   toDatabase() {
@@ -24,6 +25,7 @@ class RegisterDTO {
       email: this.email.toLowerCase(),
       passwordHash: this.password, // replaced with hash in service
       fullName: this.fullName,
+      phone: this.phone,
       role: this.role,
     };
 
@@ -35,6 +37,7 @@ class RegisterDTO {
         : null;
     if (this.location !== undefined) userData.location = this.location;
     if (this.teamClub !== undefined) userData.teamClub = this.teamClub;
+    if (this.avatarUrl !== undefined) userData.avatarUrl = this.avatarUrl;
 
     return userData;
   }
