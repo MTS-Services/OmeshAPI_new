@@ -36,8 +36,6 @@ class AuthService {
       );
       userData.passwordHash = hashedPassword;
 
-      console.log('===============================:', userData);
-
       const user = await this.authRepository.createUser(userData);
       const tokens = generateTokenPair(user);
 

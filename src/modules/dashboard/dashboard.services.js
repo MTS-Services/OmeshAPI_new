@@ -16,7 +16,7 @@ class DashboardServices {
 
         // 3. Total Organizers
         prisma.user.count({
-          where: { role: 'ORGANIZER' },
+          where: { role: 'ORGANIZER', isDeleted: false },
         }),
       ]);
 
