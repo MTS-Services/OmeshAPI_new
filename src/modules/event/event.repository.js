@@ -35,6 +35,7 @@ class EventRepository {
           availableSeats: eventData.availableSeats,
           headline: eventData.headline,
           body: eventData.body,
+          time: eventData.time,
           tagline: eventData.tagline,
           bulletsTop: eventData.bulletsTop,
           bulletsBottom: eventData.bulletsBottom,
