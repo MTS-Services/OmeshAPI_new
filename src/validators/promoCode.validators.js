@@ -10,6 +10,7 @@ const promoSchema = {
     expiresAt: Joi.date().iso().greater(Joi.ref('startsAt')).required(),
     isActive: Joi.boolean().default(true),
     allowedEmails: Joi.array().items(Joi.string().email()).optional(),
+    description: Joi.string().optional().allow('', null),
   }),
 
   update: Joi.object({

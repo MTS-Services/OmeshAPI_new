@@ -230,7 +230,7 @@ class DashboardServices {
         await Promise.all([
           prisma.event.groupBy({
             by: ['status'],
-            where: { organizerId: userId },
+            where: { organizerId: userId, isDeleted: false },
             _count: { status: true },
           }),
 
