@@ -372,6 +372,11 @@ class UserRepository {
         data: { isDeleted: true },
       });
 
+      await prisma.event.updateMany({
+        where: { organizerId: id },
+        data: { isDeleted: true },
+      });
+
       logger.info(`User deleted by admin: ${id}`);
       return true;
     } catch (error) {

@@ -6,7 +6,7 @@ class DashboardServices {
     try {
       const [totalEvents, totalPayments, totalOrganizers] = await Promise.all([
         // 1. Total Events
-        prisma.event.count(),
+        prisma.event.count({ where: { isDeleted: false } }),
 
         // 2. Total Earnings (Platform Fees from Payments)
         prisma.payment.aggregate({

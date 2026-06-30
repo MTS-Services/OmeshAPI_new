@@ -5,6 +5,8 @@ const { AppError } = require('../../middlewares/errorHandler');
 
 class PromoCodeService {
   async create(data) {
+    console.log(':====================', data);
+
     const { allowedEmails, userId, ...rest } = data;
     return await prisma.promoCode.create({
       data: {

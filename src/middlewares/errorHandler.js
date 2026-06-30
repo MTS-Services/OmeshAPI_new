@@ -89,11 +89,22 @@ const handleJWTError = (error) => {
 const handleValidationError = (error) => {
   const errors = error.details.map((detail) => ({
     field: detail.path.join('.'),
-    message: detail.message,
+    message: detail.message.replace(/['"]/g, ''),
     value: detail.context?.value,
   }));
 
-  return new AppError('Validation failed', 422, errors);
+  const formattedMessage = errors
+    .map((err) => {
+      const fieldName = err.field
+        .split('.')
+        .pop()
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (str) => str.toUpperCase());
+      return `${fieldName}: ${err.message}`;
+    })
+    .join(', ');
+
+  return new AppError(formattedMessage, 422, errors);
 };
 
 /**

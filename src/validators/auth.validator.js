@@ -28,7 +28,7 @@ const strongPassword = Joi.string()
     ),
   )
   .message(
-    'Password must be at least 12 characters with uppercase, lowercase, number and special character',
+    'Password must be at least 8 characters with uppercase, lowercase, number and special character',
   );
 
 /**
