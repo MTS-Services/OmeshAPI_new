@@ -8,6 +8,7 @@ class CreatePromoCodeDto {
     this.expiresAt = data.expiresAt ? new Date(data.expiresAt) : null;
     this.isActive = data.isActive !== undefined ? data.isActive : true;
     this.allowedEmails = data.allowedEmails || []; // Array of strings
+    this.description = data.description || null; // Optional description
   }
 }
 
