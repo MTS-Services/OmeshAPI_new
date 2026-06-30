@@ -50,7 +50,7 @@ const registerSchema = Joi.object({
   dateOfBirth: Joi.date().max('now').optional(),
   location: Joi.string().max(200).trim().optional(),
   teamClub: Joi.string().max(200).trim().optional(),
-  avatarUrl: Joi.string().trim().optional(),
+  avatarUrl: Joi.string().trim().allow('', null).optional(),
 });
 
 /**
