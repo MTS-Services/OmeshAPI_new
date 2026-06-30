@@ -310,7 +310,7 @@ model Registration {
   // Participant snapshot (Checkout form)
   firstName          String
   lastName           String
-  email              String
+  email              String?
   phone              String?
   gender             Gender?
   age                Int?
