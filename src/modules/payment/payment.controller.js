@@ -1,4 +1,5 @@
 const { asyncHandler } = require('../../middlewares/errorHandler');
+const logger = require('../../utils/logger');
 const PaymentService = require('./payment.services');
 
 class PaymentController {
@@ -69,8 +70,13 @@ class PaymentController {
 
   fygaroPaymentConfirm = asyncHandler(async (req, res) => {
     const batchId = req.body.batchId || req.params.batchId || req.query.batchId;
-    const result = await this.services.getConfromPayment(batchId);
-    res.sendSuccess(result, 'Fygaro payment confirmed successfully');
+
+    logger.info(
+      `Confirming Fygaro payment for ===== batchId ======: ${batchId}`,
+    );
+
+    // const result = await this.services.getConfromPayment(batchId);
+    res.sendSuccess({}, 'Fygaro payment confirmed successfully');
   });
 }
 
