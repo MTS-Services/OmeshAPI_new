@@ -418,6 +418,11 @@ class PaymentService {
       where: { batchId },
     });
 
+    console.log('Fygaro payment confirmation request:======', {
+      batchId,
+      payment,
+    });
+
     // if (!payment || payment.status === 'SUCCEEDED') {
     //   throw new AppError('Payment already processed or not found.', 400);
     // }
