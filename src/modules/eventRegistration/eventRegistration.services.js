@@ -404,6 +404,8 @@ class RegistrationService {
       lastName: registration.lastName,
       email: registration.email,
       phone: registration.phone || '',
+      age: registration.age || '',
+      gender: registration.gender || '',
       couponCode: registration.couponCode || '',
       selectedTShirtSize: registration.selectedTShirtSize || '',
       status: registration.status,
