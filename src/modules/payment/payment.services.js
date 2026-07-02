@@ -418,9 +418,9 @@ class PaymentService {
       where: { batchId },
     });
 
-    if (!payment || payment.status === 'SUCCEEDED') {
-      throw new AppError('Payment already processed or not found.', 400);
-    }
+    // if (!payment || payment.status === 'SUCCEEDED') {
+    //   throw new AppError('Payment already processed or not found.', 400);
+    // }
 
     const orderEmailData = {
       processingDate: processingDate || new Date().toISOString(),
