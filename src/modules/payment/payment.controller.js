@@ -80,8 +80,8 @@ class PaymentController {
       `Confirming Fygaro payment for ===== batchId ======: ${batchId}`,
     );
 
-    // const result = await this.services.getConfromPayment(batchId);
-    res.sendSuccess({}, 'Fygaro payment confirmed successfully');
+    const result = await this.services.getConfromPayment(batchId);
+    res.sendSuccess(result, 'Fygaro payment confirmed successfully');
   });
 }
 
