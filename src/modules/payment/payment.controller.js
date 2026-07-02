@@ -52,6 +52,11 @@ class PaymentController {
       card,
     } = req.body;
 
+    console.log(
+      'Fygaro payment capture request body ==============:',
+      req.body,
+    );
+
     const result = await this.services.confirmFygaroPayment({
       batchId: customReference,
       providerRef: reference || transactionId,
