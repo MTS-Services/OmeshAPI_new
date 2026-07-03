@@ -424,7 +424,11 @@ class PaymentService {
     });
 
     if (!payment || payment.status === 'SUCCEEDED') {
-      throw new AppError('Payment already processed or not found.', 400);
+      return {
+        success: true,
+        message: 'Payment already confirmed or not found.',
+        payment,
+      };
     }
 
     const orderEmailData = {
