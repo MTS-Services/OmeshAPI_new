@@ -426,7 +426,7 @@ class PaymentService {
     if (!payment || payment.status === 'SUCCEEDED') {
       return {
         success: true,
-        message: 'Payment already confirmed or not found.',
+        message: 'Payment already confirmed.',
         payment,
       };
     }

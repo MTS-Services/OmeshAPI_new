@@ -7,7 +7,7 @@ const controller = new PaymentController();
 
 // Organizer routes
 router.post('/capture', controller.paymentCapture);
-router.post('/fygaro/capture', controller.fygaroPaymentCapture);
+router.post('/fygaro/capture-new', controller.fygaroPaymentCapture);
 router.post('/fygaro/confirm', controller.fygaroPaymentConfirm);
 
 module.exports = router;
