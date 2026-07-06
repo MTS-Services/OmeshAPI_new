@@ -52,11 +52,6 @@ class PaymentController {
       card,
     } = req.body;
 
-    console.log(
-      'Fygaro payment capture request body ==============:',
-      req.body,
-    );
-
     const result = await this.services.confirmFygaroPayment({
       batchId: customReference,
       providerRef: reference || transactionId,
@@ -70,7 +65,11 @@ class PaymentController {
       processingDate: null,
     });
 
-    res.sendCreated(result, 'Fygaro payment captured successfully');
+    res.status(200).json({
+      success: true,
+      message: 'Fygaro payment captured successfully',
+      data: result,
+    });
   });
 
   fygaroPaymentConfirm = asyncHandler(async (req, res) => {
