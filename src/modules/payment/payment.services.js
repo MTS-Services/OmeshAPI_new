@@ -423,7 +423,11 @@ class PaymentService {
       payment,
     });
 
-    if (!payment || payment.status === 'SUCCEEDED') {
+    if (!payment) {
+      throw new AppError('Payment not found for the provided batchId.', 400);
+    }
+
+    if (payment.status === 'SUCCEEDED') {
       return {
         success: true,
         message: 'Payment already confirmed.',
