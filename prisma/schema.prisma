@@ -317,6 +317,7 @@ model Registration {
   dateOfBirth        DateTime?
   location           String?
   teamClub           String?
+  residential_area   String?
   selectedTShirtSize String?
   couponCode         String?
   buyTShirt          Boolean   @default(false)

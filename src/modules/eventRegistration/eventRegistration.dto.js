@@ -14,6 +14,7 @@ class RegistrationDTO {
       dateOfBirth: p.dateOfBirth ? new Date(p.dateOfBirth) : null,
       location: p.location || null,
       teamClub: p.teamClub || null,
+      residential_area: p.residential_area || null,
       selectedTShirtSize: p.selectedTShirtSize || null,
       buyTShirt: p.buyTShirt || false,
       status:

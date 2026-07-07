@@ -43,6 +43,10 @@ class PaymentController {
   // });
 
   fygaroPaymentCapture = asyncHandler(async (req, res) => {
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      return res.status(200).send('Fygaro Webhook is Active and Alive');
+    }
+
     const {
       transactionId,
       reference,
