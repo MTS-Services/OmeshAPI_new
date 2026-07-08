@@ -411,6 +411,7 @@ class RegistrationService {
       status: registration.status,
       source: registration.source,
       teamClub: registration.teamClub || '',
+      residential_area: registration.residential_area || '',
       createdAt: registration.createdAt.toISOString(),
     }));
   }
