@@ -20,6 +20,12 @@ const updateExpiredEvents = require('./utils/cronJobs');
 const app = express();
 const API_PREFIX = '/api/v1';
 
+const captureRawBody = (req, res, buffer) => {
+  if (buffer?.length) {
+    req.rawBody = Buffer.from(buffer);
+  }
+};
+
 // const uploadsPath = path.join(__dirname, '..', 'uploads');
 const uploadsPath = path.join(process.cwd(), 'uploads');
 app.use('/uploads', express.static(uploadsPath));
@@ -67,8 +73,14 @@ app.use('/api/', limiter);
 app.use(compression());
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '10mb', verify: captureRawBody }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: '10mb',
+    verify: captureRawBody,
+  }),
+);
 
 // Logging middleware
 // Custom Morgan tokens for colorized logging

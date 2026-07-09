@@ -1,8 +1,10 @@
 const axios = require('axios');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { prisma } = require('../../config/database');
 const { AppError } = require('../../middlewares/errorHandler');
 const paymentEmitter = require('../../utils/eventEmitter');
+const logger = require('../../utils/logger');
 
 const FYGARO_SUCCESS_STATUSES = new Set([
   'APPROVED',
@@ -11,6 +13,61 @@ const FYGARO_SUCCESS_STATUSES = new Set([
   'SUCCESS',
   'SUCCEEDED',
 ]);
+
+const DEFAULT_FYGARO_WEBHOOK_MAX_AGE_SECONDS = 300;
+
+const parseDelimitedEnv = (value) => {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const parseFygaroSignatureHeader = (header) => {
+  return header.split(',').reduce((accumulator, token) => {
+    const [key, value] = token.split('=', 2).map((item) => item.trim());
+
+    if (!key || value === undefined) {
+      return accumulator;
+    }
+
+    if (!accumulator[key]) {
+      accumulator[key] = [];
+    }
+
+    accumulator[key].push(value);
+    return accumulator;
+  }, {});
+};
+
+const computeFygaroSignature = (secret, timestamp, rawBody) => {
+  const hmac = crypto.createHmac('sha256', secret);
+  hmac.update(`${timestamp}.`);
+  hmac.update(rawBody);
+  return hmac.digest('hex');
+};
+
+const isMatchingFygaroSignature = (expectedSignature, candidateSignature) => {
+  try {
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+    const candidateBuffer = Buffer.from(candidateSignature, 'hex');
+
+    if (
+      expectedBuffer.length === 0 ||
+      expectedBuffer.length !== candidateBuffer.length
+    ) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, candidateBuffer);
+  } catch (error) {
+    return false;
+  }
+};
 
 class PaymentService {
   // constructor() {
@@ -34,6 +91,173 @@ class PaymentService {
     }
 
     return normalizedMethod;
+  }
+
+  getFygaroWebhookSecrets() {
+    const secrets = parseDelimitedEnv(process.env.FYGARO_WEBHOOK_SECRETS);
+
+    if (secrets.length > 0) {
+      return secrets;
+    }
+
+    return parseDelimitedEnv(process.env.FYGARO_SECRET_KEY);
+  }
+
+  getFygaroWebhookKeyIds() {
+    const keyIds = parseDelimitedEnv(process.env.FYGARO_WEBHOOK_KEY_IDS);
+
+    if (keyIds.length > 0) {
+      return keyIds;
+    }
+
+    return parseDelimitedEnv(process.env.FYGARO_PUBLIC_KEY);
+  }
+
+  validateFygaroWebhook({ signatureHeader, keyIdHeader, rawBody }) {
+    const secrets = this.getFygaroWebhookSecrets();
+
+    if (secrets.length === 0) {
+      throw new AppError('Fygaro webhook secrets are not configured.', 500);
+    }
+
+    if (!signatureHeader) {
+      throw new AppError('Missing Fygaro-Signature header.', 400);
+    }
+
+    if (!rawBody || rawBody.length === 0) {
+      throw new AppError(
+        'Missing raw request body for webhook validation.',
+        400,
+      );
+    }
+
+    const expectedKeyIds = this.getFygaroWebhookKeyIds();
+
+    if (expectedKeyIds.length > 0) {
+      if (!keyIdHeader) {
+        throw new AppError('Missing Fygaro-Key-ID header.', 400);
+      }
+
+      if (!expectedKeyIds.includes(keyIdHeader)) {
+        throw new AppError('Invalid Fygaro-Key-ID header.', 400);
+      }
+    }
+
+    const parsedHeader = parseFygaroSignatureHeader(signatureHeader);
+    const timestamp = parsedHeader.t?.[0];
+    const signatures = parsedHeader.v1 || [];
+
+    if (!timestamp) {
+      throw new AppError('Fygaro signature timestamp is missing.', 400);
+    }
+
+    const timestampNumber = Number(timestamp);
+
+    if (Number.isNaN(timestampNumber)) {
+      throw new AppError('Fygaro signature timestamp is invalid.', 400);
+    }
+
+    const maxAgeSeconds =
+      Number(process.env.FYGARO_WEBHOOK_MAX_AGE_SECONDS) ||
+      DEFAULT_FYGARO_WEBHOOK_MAX_AGE_SECONDS;
+
+    if (Math.abs(Date.now() / 1000 - timestampNumber) > maxAgeSeconds) {
+      throw new AppError('Fygaro signature timestamp has expired.', 400);
+    }
+
+    if (signatures.length === 0) {
+      throw new AppError('Fygaro signature digest is missing.', 400);
+    }
+
+    const isValid = secrets.some((secret) => {
+      const expectedSignature = computeFygaroSignature(
+        secret,
+        timestamp,
+        rawBody,
+      );
+
+      return signatures.some((candidateSignature) => {
+        return isMatchingFygaroSignature(expectedSignature, candidateSignature);
+      });
+    });
+
+    if (!isValid) {
+      throw new AppError('Fygaro webhook signature validation failed.', 400);
+    }
+  }
+
+  async findFygaroPayment(batchId, providerRef) {
+    if (batchId) {
+      return prisma.payment.findUnique({
+        where: { batchId },
+      });
+    }
+
+    if (!providerRef) {
+      return null;
+    }
+
+    return prisma.payment.findFirst({
+      where: {
+        OR: [{ providerRef }, { batchId: providerRef }],
+      },
+    });
+  }
+
+  async processFygaroWebhook(payload = {}) {
+    const providerRef =
+      payload.reference ||
+      payload.transactionId ||
+      payload.transaction_id ||
+      null;
+    const customReference =
+      payload.customReference || payload.custom_reference || null;
+    const payment = await this.findFygaroPayment(customReference, providerRef);
+
+    if (!payment) {
+      logger.warn('Fygaro webhook could not reconcile payment.', {
+        customReference,
+        providerRef,
+      });
+      return {
+        success: false,
+        skipped: true,
+        reason: 'PAYMENT_NOT_FOUND',
+      };
+    }
+
+    try {
+      return await this.confirmFygaroPayment({
+        batchId: payment.batchId,
+        providerRef,
+        status:
+          payload.status ||
+          payload.transactionStatus ||
+          payload.transaction_status ||
+          'APPROVED',
+        cardType: payload.card?.brand || 'CARD',
+        companyTradeName: payload.companyTradeName || null,
+        transactionAmount: payload.amount || payload.transactionAmount,
+        currency: payload.currency,
+        orderNumber: payload.reference || providerRef,
+        serviceDescription:
+          payload.serviceDescription || payload.service_description || null,
+        processingDate:
+          payload.processingDate || payload.processing_date || null,
+      });
+    } catch (error) {
+      logger.error('Fygaro webhook reconciliation failed.', {
+        error: error.message,
+        batchId: payment.batchId,
+        providerRef,
+      });
+
+      return {
+        success: false,
+        skipped: true,
+        reason: 'RECONCILIATION_FAILED',
+      };
+    }
   }
 
   async finalizeSuccessfulPayment(

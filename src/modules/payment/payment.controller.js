@@ -47,32 +47,32 @@ class PaymentController {
       return res.status(200).send('Fygaro Webhook is Active and Alive');
     }
 
-    const {
-      transactionId,
-      reference,
-      customReference,
-      amount,
-      currency,
-      card,
-    } = req.body;
-
-    const result = await this.services.confirmFygaroPayment({
-      batchId: customReference,
-      providerRef: reference || transactionId,
-      status: 'APPROVED',
-      cardType: card?.brand || 'CARD',
-      companyTradeName: null,
-      transactionAmount: amount,
-      currency,
-      orderNumber: reference,
-      serviceDescription: null,
-      processingDate: null,
+    this.services.validateFygaroWebhook({
+      signatureHeader: req.get('Fygaro-Signature'),
+      keyIdHeader: req.get('Fygaro-Key-ID'),
+      rawBody: req.rawBody,
     });
+
+    const payload = { ...req.body };
 
     res.status(200).json({
       success: true,
-      message: 'Fygaro payment captured successfully',
-      data: result,
+      message: 'Fygaro webhook received successfully',
+    });
+
+    setImmediate(() => {
+      this.services.processFygaroWebhook(payload).catch((error) => {
+        logger.error('Fygaro webhook processing failed', {
+          error: error.message,
+          stack: error.stack,
+          reference:
+            payload.reference ||
+            payload.transactionId ||
+            payload.transaction_id,
+          customReference:
+            payload.customReference || payload.custom_reference || null,
+        });
+      });
     });
   });
 
