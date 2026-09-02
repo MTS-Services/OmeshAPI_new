@@ -390,6 +390,14 @@ class RegistrationService {
             title: true,
           },
         },
+        payment: {
+          select: {
+            subtotal: true,
+            processingFee: true,
+            discount: true,
+            total: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -406,6 +414,8 @@ class RegistrationService {
       phone: registration.phone || '',
       age: registration.age || '',
       gender: registration.gender || '',
+      priceBeforeFee: registration.payment?.subtotal?.toString() || '',
+      processingFee: registration.payment?.processingFee?.toString() || '',
       couponCode: registration.couponCode || '',
       selectedTShirtSize: registration.selectedTShirtSize || '',
       status: registration.status,
