@@ -30,8 +30,15 @@ const envSchema = Joi.object({
   ),
 
   // File Upload Configuration
-  MAX_FILE_SIZE: Joi.number().default(5 * 1024 * 1024), // 5MB default
+  MAX_FILE_SIZE: Joi.number().default(50 * 1024 * 1024), // 50MB default to support videos
   UPLOAD_PATH: Joi.string().default("./uploads"),
+
+  // Cloudflare R2 Configuration
+  R2_ACCOUNT_ID: Joi.string().allow("").default(""),
+  R2_ACCESS_KEY_ID: Joi.string().allow("").default(""),
+  R2_SECRET_ACCESS_KEY: Joi.string().allow("").default(""),
+  R2_BUCKET_NAME: Joi.string().allow("").default("omesh-media"),
+  R2_PUBLIC_DOMAIN: Joi.string().allow("").default(""),
 
   // Security
   BCRYPT_ROUNDS: Joi.number().default(12),
@@ -71,6 +78,13 @@ const config = {
   upload: {
     maxFileSize: envVars.MAX_FILE_SIZE,
     path: envVars.UPLOAD_PATH,
+  },
+  r2: {
+    accountId: envVars.R2_ACCOUNT_ID,
+    accessKeyId: envVars.R2_ACCESS_KEY_ID,
+    secretAccessKey: envVars.R2_SECRET_ACCESS_KEY,
+    bucketName: envVars.R2_BUCKET_NAME,
+    publicDomain: envVars.R2_PUBLIC_DOMAIN,
   },
   security: {
     bcryptRounds: envVars.BCRYPT_ROUNDS,

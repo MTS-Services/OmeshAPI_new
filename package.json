@@ -25,6 +25,7 @@
   "author": "McCann & Curran",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1125.0",
     "@prisma/client": "^5.22.0",
     "axios": "^1.16.0",
     "bcryptjs": "^2.4.3",
