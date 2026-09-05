@@ -20,11 +20,21 @@ const createRegistrationTransaction = async ({
   user,
   paymentMethod = 'PAYPAL',
 }) => {
-  const { eventId, participants, couponCode, platformFee = 0, source } = data;
+  const {
+    eventId,
+    pricingTierId,
+    participants,
+    couponCode,
+    platformFee = 0,
+    source,
+  } = data;
   const onlinePaymentMethod = source === 'ONLINE' ? paymentMethod : 'MANUAL';
 
   const transactionResult = await prisma.$transaction(async (tx) => {
-    const event = await tx.event.findUnique({ where: { id: eventId } });
+    const event = await tx.event.findUnique({
+      where: { id: eventId },
+      include: { pricingTiers: true },
+    });
     if (
       !event ||
       event.registerClose ||
@@ -33,8 +43,19 @@ const createRegistrationTransaction = async ({
       throw new AppError('Registration unavailable or seats full.', 400);
     }
 
+    const selectedTier = pricingTierId
+      ? event.pricingTiers.find((tier) => tier.id === pricingTierId)
+      : event.pricingTiers.length === 1
+        ? event.pricingTiers[0]
+        : null;
+
+    if ((pricingTierId && !selectedTier) || (event.pricingTiers.length > 1 && !selectedTier)) {
+      throw new AppError('A valid pricing tier is required.', 400);
+    }
+
     const batchId = `${source}-${Date.now()}`;
-    let subtotal = Number(event.price) * participants.length;
+    const ticketPrice = selectedTier ? Number(selectedTier.price) : Number(event.price);
+    let subtotal = ticketPrice * participants.length;
 
     const tShirtCount = participants.filter((p) => p.buyTShirt).length;
 
@@ -95,6 +116,7 @@ const createRegistrationTransaction = async ({
         batchId,
         status: registrationStatus,
         source: source,
+        pricingTierId: selectedTier?.id || null,
         couponCode: couponCode,
         userId:
           source === 'ONLINE' ? user.id : user.role === 'USER' ? user.id : null,
@@ -338,6 +360,7 @@ class RegistrationService {
       const [data, total] = await Promise.all([
         prisma.registration.findMany({
           where: finalWhere,
+          include: { pricingTier: true },
           orderBy: {
             [sortBy]: sortOrder,
           },
@@ -398,6 +421,12 @@ class RegistrationService {
             total: true,
           },
         },
+        pricingTier: {
+          select: {
+            name: true,
+            price: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -408,6 +437,8 @@ class RegistrationService {
       // registrationId: registration.id,
       // eventId: registration.eventId,
       eventTitle: registration.event?.title || '',
+      pricingTier: registration.pricingTier?.name || '',
+      ticketPrice: registration.pricingTier?.price?.toString() || '',
       firstName: registration.firstName,
       lastName: registration.lastName,
       email: registration.email,

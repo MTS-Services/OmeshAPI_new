@@ -257,6 +257,7 @@ model Event {
   organizer   User   @relation("EventsByOrganizer", fields: [organizerId], references: [id])
 
   images        EventImage[]
+  pricingTiers  PricingTier[]
   registrations Registration[]
   reviews       EventReview[]
   payments      Payment[]
@@ -267,6 +268,19 @@ model Event {
 
   @@index([status, startAt])
   @@index([organizerId])
+}
+
+model PricingTier {
+  id      String  @id @default(cuid())
+  name    String
+  price   Decimal @db.Decimal(10, 2)
+  eventId String
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  registrations Registration[]
+
+  @@unique([eventId, name])
+  @@index([eventId])
 }
 
 model EventImage {
@@ -305,6 +319,9 @@ model Registration {
   userId  String? // null when admin/organizer adds participant manually
   user    User?   @relation(fields: [userId], references: [id])
 
+  pricingTierId String?
+  pricingTier   PricingTier? @relation(fields: [pricingTierId], references: [id], onDelete: SetNull)
+
   batchId String
 
   // Participant snapshot (Checkout form)
@@ -334,6 +351,7 @@ model Registration {
   // @@unique([eventId, email])
   @@index([eventId, status])
   @@index([userId])
+  @@index([pricingTierId])
 }
 
 // -----------------------------------------------------------------

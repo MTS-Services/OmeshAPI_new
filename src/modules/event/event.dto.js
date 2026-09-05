@@ -28,6 +28,12 @@ export class CreateEventDTO {
     // Pricing & Capacity
     // Ensure price is treated as a number/decimal string for Prisma
     this.price = data.price || 0;
+    this.pricingTiers = Array.isArray(data.pricingTiers) && data.pricingTiers.length > 0
+      ? data.pricingTiers.map((tier) => ({
+          name: tier.name.trim(),
+          price: Number(tier.price),
+        }))
+      : [{ name: 'General Admission', price: Number(data.price || 0) }];
     this.currency = data.currency || 'USD';
     this.totalSeats = Number(data.totalSeats) || 0;
     this.availableSeats = Number(data.availableSeats) || this.totalSeats;
@@ -104,6 +110,13 @@ export class UpdateEventDTO {
 
     // Pricing & Capacity
     if (data.price !== undefined) this.price = data.price;
+    if (Array.isArray(data.pricingTiers)) {
+      this.pricingTiers = data.pricingTiers.map((tier) => ({
+        ...(tier.id ? { id: tier.id } : {}),
+        name: tier.name.trim(),
+        price: Number(tier.price),
+      }));
+    }
     if (data.currency !== undefined) this.currency = data.currency;
     if (data.totalSeats !== undefined)
       this.totalSeats = Number(data.totalSeats);

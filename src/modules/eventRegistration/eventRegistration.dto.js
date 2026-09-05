@@ -1,6 +1,7 @@
 class RegistrationDTO {
   constructor(data) {
     this.eventId = data.eventId;
+    this.pricingTierId = data.pricingTierId || null;
     this.source = data.source;
     this.platformFee = data.platformFee;
     this.couponCode = data.couponCode || null;

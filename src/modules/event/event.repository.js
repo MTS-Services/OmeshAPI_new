@@ -7,6 +7,12 @@ const { prisma } = require('../../config/database');
 const { AppError } = require('../../middlewares/errorHandler');
 const logger = require('../../utils/logger');
 
+const serializePricingTiers = (pricingTiers = []) =>
+  pricingTiers.map((tier) => ({
+    ...tier,
+    price: Number(tier.price),
+  }));
+
 class EventRepository {
   /**
    * @method createEvent
@@ -30,6 +36,9 @@ class EventRepository {
           country: eventData.country,
           distance: eventData.distance,
           price: eventData.price,
+          pricingTiers: {
+            create: eventData.pricingTiers || [],
+          },
           currency: eventData.currency,
           totalSeats: eventData.totalSeats,
           availableSeats: eventData.availableSeats,
@@ -55,6 +64,7 @@ class EventRepository {
         },
         include: {
           images: true,
+          pricingTiers: true,
         },
       });
       logger.info(
@@ -164,6 +174,7 @@ class EventRepository {
       const events = rawEvents.map((event) => ({
         ...event,
         price: Number(event.price),
+        pricingTiers: serializePricingTiers(event.pricingTiers),
       }));
 
       return {
@@ -253,6 +264,7 @@ class EventRepository {
           where: { ...finalWhere, isDeleted: false },
           include: {
             images: true,
+            pricingTiers: true,
             organizer: {
               select: {
                 id: true,
@@ -272,6 +284,7 @@ class EventRepository {
       const events = rawEvents.map((event) => ({
         ...event,
         price: Number(event.price),
+        pricingTiers: serializePricingTiers(event.pricingTiers),
       }));
 
       return { events, total };
@@ -295,6 +308,7 @@ class EventRepository {
             },
           },
           images: true,
+          pricingTiers: true,
         },
       });
 
@@ -304,6 +318,7 @@ class EventRepository {
       return {
         ...event,
         price: Number(event.price),
+        pricingTiers: serializePricingTiers(event.pricingTiers),
         platformFeePct: Number(platformFee.platformFeePct),
       };
     } catch (error) {
@@ -324,6 +339,7 @@ class EventRepository {
             },
           },
           images: true,
+          pricingTiers: true,
           payments: {
             where: {
               status: 'SUCCEEDED',
@@ -435,20 +451,51 @@ class EventRepository {
 
   async updateEvent(eventId, updateData) {
     try {
-      const result = await prisma.event.update({
-        where: { id: eventId },
-        data: {
-          ...updateData,
-          images:
-            updateData.images?.length > 0
-              ? {
-                  deleteMany: {},
-                  create: updateData.images.map((url) => ({
-                    url: url,
-                  })),
-                }
-              : undefined,
-        },
+      const { pricingTiers, images, ...eventFields } = updateData;
+      const result = await prisma.$transaction(async (tx) => {
+        const event = await tx.event.update({
+          where: { id: eventId },
+          data: {
+            ...eventFields,
+            images:
+              images?.length > 0
+                ? {
+                    deleteMany: {},
+                    create: images.map((url) => ({ url })),
+                  }
+                : undefined,
+          },
+        });
+
+        if (Array.isArray(pricingTiers)) {
+          const existingTiers = await tx.pricingTier.findMany({
+            where: { eventId },
+            select: { id: true },
+          });
+          const existingIds = new Set(existingTiers.map((tier) => tier.id));
+          const retainedIds = pricingTiers
+            .filter((tier) => tier.id && existingIds.has(tier.id))
+            .map((tier) => tier.id);
+
+          await tx.pricingTier.deleteMany({
+            where: { eventId, id: { notIn: retainedIds } },
+          });
+
+          for (const tier of pricingTiers) {
+            if (tier.id && existingIds.has(tier.id)) {
+              await tx.pricingTier.update({
+                where: { id: tier.id },
+                data: { name: tier.name, price: tier.price },
+              });
+            } else {
+              await tx.pricingTier.create({
+                data: { eventId, name: tier.name, price: tier.price },
+              });
+            }
+          }
+        }
+
+        return event;
       });
 
       if (!result) {

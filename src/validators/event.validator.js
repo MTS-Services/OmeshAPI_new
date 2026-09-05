@@ -4,6 +4,12 @@
  */
 const Joi = require('joi');
 
+const pricingTierSchema = Joi.object({
+  id: Joi.string().optional(),
+  name: Joi.string().trim().min(1).max(100).required(),
+  price: Joi.number().precision(2).min(0).required(),
+});
+
 const CreateEventSchema = Joi.object({
   // Basic Info
   title: Joi.string().required().trim().min(3).max(255),
@@ -24,6 +30,7 @@ const CreateEventSchema = Joi.object({
 
   // Pricing & Capacity
   price: Joi.number().precision(2).min(0).default(0),
+  pricingTiers: Joi.array().items(pricingTierSchema).max(100).default([]),
   currency: Joi.string().length(3).uppercase().default('USD'),
   totalSeats: Joi.number().integer().min(0).default(0),
   availableSeats: Joi.number().integer().min(0).max(Joi.ref('totalSeats')),
@@ -75,6 +82,7 @@ const UpdateEventSchema = Joi.object({
   complete: Joi.boolean().optional(),
 
   price: Joi.number().precision(2).min(0).optional(),
+  pricingTiers: Joi.array().items(pricingTierSchema).max(100).optional(),
   totalSeats: Joi.number().integer().min(0).optional(),
   availableSeats: Joi.number().integer().min(0).optional(),
 
