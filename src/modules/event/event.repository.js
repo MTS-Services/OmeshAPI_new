@@ -485,11 +485,20 @@ class EventRepository {
             if (tier.id && existingIds.has(tier.id)) {
               await tx.pricingTier.update({
                 where: { id: tier.id },
-                data: { name: tier.name, price: tier.price },
+                data: {
+                  name: tier.name,
+                  price: tier.price,
+                  ...(tier.registerClose !== undefined ? { registerClose: tier.registerClose } : {}),
+                },
               });
             } else {
               await tx.pricingTier.create({
-                data: { eventId, name: tier.name, price: tier.price },
+                data: {
+                  eventId,
+                  name: tier.name,
+                  price: tier.price,
+                  ...(tier.registerClose !== undefined ? { registerClose: tier.registerClose } : {}),
+                },
               });
             }
           }

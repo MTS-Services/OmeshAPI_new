@@ -271,11 +271,12 @@ model Event {
 }
 
 model PricingTier {
-  id      String  @id @default(cuid())
-  name    String
-  price   Decimal @db.Decimal(10, 2)
-  eventId String
-  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id            String  @id @default(cuid())
+  name          String
+  price         Decimal @db.Decimal(10, 2)
+  registerClose Boolean @default(false)
+  eventId       String
+  event         Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   registrations Registration[]
 

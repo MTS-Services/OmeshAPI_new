@@ -53,6 +53,10 @@ const createRegistrationTransaction = async ({
       throw new AppError('A valid pricing tier is required.', 400);
     }
 
+    if (selectedTier && selectedTier.registerClose) {
+      throw new AppError('Registration for this tier is closed.', 400);
+    }
+
     const batchId = `${source}-${Date.now()}`;
     const ticketPrice = selectedTier ? Number(selectedTier.price) : Number(event.price);
     let subtotal = ticketPrice * participants.length;

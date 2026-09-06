@@ -59,6 +59,22 @@ const USERS = [
       website: 'https://marathonmasters.com',
     },
   },
+  {
+    fullName: 'Test Organization',
+    email: 'testorganization@gmail.com',
+    password: 'Organizer@123',
+    role: 'ORGANIZER',
+    status: 'ACTIVE',
+    emailVerified: true,
+    phone: '+1234567890',
+    gender: 'MALE',
+    location: 'Test Location',
+    organizerProfile: {
+      organizationName: 'Test Organization',
+      bio: 'Test organization bio',
+      website: 'https://test.com',
+    },
+  },
 
   // ========== REGULAR USERS ==========
   {
@@ -118,14 +134,18 @@ async function seedUsers() {
   console.log('🌱 Starting user seeding...\n');
 
   try {
-    // Clear existing users (optional - comment out if you want to keep existing data)
-    console.log('🗑️  Clearing existing users...');
-    await prisma.user.deleteMany({});
-    console.log('✅ Cleared existing users\n');
-
     // Seed users
     for (const userData of USERS) {
       const { password, organizerProfile, ...userFields } = userData;
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: userFields.email }
+      });
+
+      if (existingUser) {
+        console.log(`👤 User ${userFields.email} already exists, skipping...`);
+        continue;
+      }
 
       // Hash password
       const passwordHash = await bcrypt.hash(password, 12);

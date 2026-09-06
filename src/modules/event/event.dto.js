@@ -32,6 +32,7 @@ export class CreateEventDTO {
       ? data.pricingTiers.map((tier) => ({
           name: tier.name.trim(),
           price: Number(tier.price),
+          ...(tier.registerClose !== undefined ? { registerClose: Boolean(tier.registerClose) } : {}),
         }))
       : [{ name: 'General Admission', price: Number(data.price || 0) }];
     this.currency = data.currency || 'USD';
@@ -115,6 +116,7 @@ export class UpdateEventDTO {
         ...(tier.id ? { id: tier.id } : {}),
         name: tier.name.trim(),
         price: Number(tier.price),
+        ...(tier.registerClose !== undefined ? { registerClose: Boolean(tier.registerClose) } : {}),
       }));
     }
     if (data.currency !== undefined) this.currency = data.currency;
