@@ -153,6 +153,7 @@ class EventRepository {
           where: { ...finalWhere, isDeleted: false },
           include: {
             images: true,
+            pricingTiers: true,
             organizer: {
               select: {
                 id: true,
