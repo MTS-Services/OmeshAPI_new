@@ -24,8 +24,10 @@ class RegistrationController {
   fygaroEventRegistration = asyncHandler(async (req, res) => {
     const user = req.user;
     const dto = new RegistrationDTO(req.body);
-    const result = await this.services.processFygaroRegistration(dto, user);
-    res.sendCreated(result, 'Fygaro payment created successfully');
+    // Routes through PAYMENT_PROVIDER (WIPAY | FYGARO). Legacy Fygaro-only
+    // method remains available on the service for explicit calls.
+    const result = await this.services.processCheckoutRegistration(dto, user);
+    res.sendCreated(result, 'Checkout payment created successfully');
   });
 
   getEventRegistration = asyncHandler(async (req, res) => {

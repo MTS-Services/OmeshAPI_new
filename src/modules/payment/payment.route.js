@@ -9,5 +9,7 @@ const controller = new PaymentController();
 router.post('/capture', controller.paymentCapture);
 router.all('/fygaro/capture-new', controller.fygaroPaymentCapture);
 router.post('/fygaro/confirm', controller.fygaroPaymentConfirm);
+router.post('/wipay/confirm', controller.wipayPaymentConfirm);
+router.get('/wipay/confirm', controller.wipayPaymentConfirm);
 
 module.exports = router;

@@ -86,6 +86,31 @@ class PaymentController {
     const result = await this.services.getConfromPayment(batchId);
     res.sendSuccess(result, 'Fygaro payment confirmed successfully');
   });
+
+  wipayPaymentConfirm = asyncHandler(async (req, res) => {
+    const body = { ...req.query, ...req.body };
+    const result = await this.services.confirmWiPayPayment({
+      batchId: body.batchId || body.order_id || body.orderId,
+      orderId: body.order_id || body.orderId,
+      transactionId: body.transaction_id || body.transactionId,
+      status: body.status,
+      hash: body.hash,
+      total: body.total,
+      currency: body.currency,
+      card: body.card,
+      message: body.message,
+      date: body.date,
+    });
+
+    const eventTitle = result.eventTitle || result?.payment?.event?.title;
+    res.sendSuccess(
+      {
+        ...result,
+        eventTitle,
+      },
+      'WiPay payment confirmed successfully',
+    );
+  });
 }
 
 module.exports = PaymentController;

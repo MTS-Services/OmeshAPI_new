@@ -86,11 +86,84 @@ class PaymentService {
   normalizePaymentMethod(paymentMethod = 'PAYPAL') {
     const normalizedMethod = paymentMethod.toUpperCase();
 
-    if (!['PAYPAL', 'FYGARO'].includes(normalizedMethod)) {
+    if (!['PAYPAL', 'FYGARO', 'WIPAY'].includes(normalizedMethod)) {
       throw new AppError('Unsupported payment method.', 400);
     }
 
     return normalizedMethod;
+  }
+
+  static getConfiguredPaymentProvider() {
+    const raw = String(process.env.PAYMENT_PROVIDER || 'FYGARO')
+      .trim()
+      .toUpperCase();
+
+    if (raw === 'WIPAY' || raw === 'WIPAYCARIBBEAN') {
+      return 'WIPAY';
+    }
+
+    if (raw === 'FYGARO') {
+      return 'FYGARO';
+    }
+
+    throw new AppError(
+      'PAYMENT_PROVIDER must be either WIPAY or FYGARO.',
+      500,
+    );
+  }
+
+  getWiPayConfig() {
+    const accountNumber = String(process.env.WIPAY_ACCOUNT_NUMBER || '').trim();
+    const apiKey = String(process.env.WIPAY_API_KEY || '').trim();
+    const countryCode = String(process.env.WIPAY_COUNTRY_CODE || 'TT')
+      .trim()
+      .toUpperCase();
+    const currency = String(process.env.WIPAY_CURRENCY || 'USD')
+      .trim()
+      .toUpperCase();
+    const environment = String(process.env.WIPAY_ENVIRONMENT || 'sandbox')
+      .trim()
+      .toLowerCase();
+    const feeStructure = String(
+      process.env.WIPAY_FEE_STRUCTURE || 'customer_pay',
+    ).trim();
+    const origin = String(process.env.WIPAY_ORIGIN || 'EnduraEvents').trim();
+    const baseUrl = String(
+      process.env.WIPAY_BASE_URL ||
+        `https://${countryCode.toLowerCase()}.wipayfinancial.com/plugins/payments/request`,
+    ).trim();
+    const responseUrl = String(
+      process.env.WIPAY_RESPONSE_URL ||
+        `${process.env.FRONTEND_URL}/events/payment-success`,
+    ).trim();
+
+    if (!accountNumber || !apiKey) {
+      throw new AppError('WiPay credentials are not configured.', 500);
+    }
+
+    if (!['live', 'sandbox'].includes(environment)) {
+      throw new AppError('WIPAY_ENVIRONMENT must be live or sandbox.', 500);
+    }
+
+    return {
+      accountNumber,
+      apiKey,
+      countryCode,
+      currency,
+      environment,
+      feeStructure,
+      origin,
+      baseUrl,
+      responseUrl,
+    };
+  }
+
+  buildWiPayResponseHash(transactionId, originalTotal, apiKey) {
+    const total = Number(originalTotal).toFixed(2);
+    return crypto
+      .createHash('md5')
+      .update(`${transactionId}${total}${apiKey}`)
+      .digest('hex');
   }
 
   getFygaroWebhookSecrets() {
@@ -390,11 +463,16 @@ class PaymentService {
     batchId,
     paymentMethod = 'PAYPAL',
     eventTitle,
+    customerEmail,
   ) {
     const normalizedMethod = this.normalizePaymentMethod(paymentMethod);
 
     if (normalizedMethod === 'FYGARO') {
       return this.createFygaroOrder(totalAmount, batchId, eventTitle);
+    }
+
+    if (normalizedMethod === 'WIPAY') {
+      return this.createWiPayOrder(totalAmount, batchId, customerEmail);
     }
 
     const paypalOrder = await this.createPaypalOrder(totalAmount, batchId);
@@ -694,11 +772,197 @@ class PaymentService {
       return this.confirmFygaroPayment({ batchId, providerRef, status });
     }
 
+    if (normalizedMethod === 'WIPAY') {
+      return this.confirmWiPayPayment({
+        batchId,
+        transactionId: providerRef,
+        status,
+      });
+    }
+
     if (!providerRef) {
       throw new AppError('providerRef is required for PayPal capture.', 400);
     }
 
     return this.capturePaypalPayment(providerRef);
+  }
+
+  async createWiPayOrder(totalAmount, batchId, customerEmail) {
+    const config = this.getWiPayConfig();
+    const total = Number(totalAmount).toFixed(2);
+
+    try {
+      const params = new URLSearchParams();
+      params.append('account_number', config.accountNumber);
+      params.append('avs', '0');
+      params.append('country_code', config.countryCode);
+      params.append('currency', config.currency);
+      params.append('environment', config.environment);
+      params.append('fee_structure', config.feeStructure);
+      params.append('method', 'credit_card_co');
+      params.append('order_id', batchId);
+      params.append('origin', config.origin);
+      params.append('response_url', config.responseUrl);
+      params.append('total', total);
+      params.append('data', JSON.stringify({ batchId }));
+      if (customerEmail) {
+        params.append('email', String(customerEmail).trim());
+      }
+
+      const response = await axios.post(config.baseUrl, params.toString(), {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        maxRedirects: 0,
+        validateStatus: (statusCode) => statusCode >= 200 && statusCode < 400,
+      });
+
+      const payload =
+        typeof response.data === 'string'
+          ? (() => {
+              try {
+                return JSON.parse(response.data);
+              } catch {
+                return null;
+              }
+            })()
+          : response.data;
+
+      const paymentUrl = payload?.url || payload?.payment_url || null;
+      const transactionId = payload?.transaction_id || payload?.transactionId;
+
+      if (!paymentUrl) {
+        const gatewayMessage =
+          payload?.message ||
+          'WiPay did not return a checkout URL for this payment.';
+        throw new AppError(gatewayMessage, 502);
+      }
+
+      return {
+        batchId,
+        paymentMethod: 'WIPAY',
+        paymentUrl,
+        providerRef: transactionId || batchId,
+        transactionId: transactionId || null,
+      };
+    } catch (error) {
+      console.error(
+        'WiPay Create Order Error:',
+        error.response?.data || error.message,
+      );
+
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      const gatewayMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Could not create WiPay order';
+      throw new AppError(gatewayMessage, 502);
+    }
+  }
+
+  async confirmWiPayPayment({
+    batchId,
+    orderId,
+    transactionId,
+    status,
+    hash,
+    total,
+    currency,
+    card,
+    message,
+    date,
+  }) {
+    const resolvedBatchId = String(batchId || orderId || '').trim();
+    if (!resolvedBatchId) {
+      throw new AppError(
+        'batchId (order_id) is required for WiPay confirmation.',
+        400,
+      );
+    }
+
+    const normalizedStatus = String(status || '')
+      .trim()
+      .toLowerCase();
+    if (normalizedStatus && normalizedStatus !== 'success') {
+      throw new AppError(message || 'WiPay payment was not successful.', 400);
+    }
+
+    const payment = await prisma.payment.findUnique({
+      where: { batchId: resolvedBatchId },
+      include: {
+        event: {
+          select: { id: true, title: true, organizerId: true },
+        },
+      },
+    });
+
+    if (!payment) {
+      throw new AppError('Payment not found for the provided order_id.', 400);
+    }
+
+    if (payment.status === 'SUCCEEDED') {
+      return {
+        success: true,
+        message: 'Payment already confirmed.',
+        payment,
+        eventTitle: payment.event?.title,
+      };
+    }
+
+    const config = this.getWiPayConfig();
+    const txnId = String(transactionId || '').trim();
+
+    if (!txnId) {
+      throw new AppError(
+        'transaction_id is required for WiPay confirmation.',
+        400,
+      );
+    }
+
+    if (!hash) {
+      throw new AppError(
+        'hash is required for successful WiPay confirmation.',
+        400,
+      );
+    }
+
+    const expectedHash = this.buildWiPayResponseHash(
+      txnId,
+      payment.total,
+      config.apiKey,
+    );
+
+    if (expectedHash.toLowerCase() !== String(hash).trim().toLowerCase()) {
+      throw new AppError('Invalid WiPay response hash.', 400);
+    }
+
+    const orderEmailData = {
+      processingDate: date || new Date().toISOString(),
+      companyTradeName: 'Endura Sports Limited Traded as Endura Events.',
+      cardType: card || 'CARD',
+      transactionAmount: total || payment.total,
+      currency: currency || payment.currency || config.currency,
+      orderNumber: txnId,
+      serviceDescription: `Event Registration Batch: ${payment.batchId}`,
+    };
+
+    return prisma.$transaction(async (tx) => {
+      const result = await this.finalizeSuccessfulPayment(
+        tx,
+        payment,
+        txnId,
+        orderEmailData,
+      );
+
+      return {
+        ...result,
+        eventTitle: payment.event?.title,
+      };
+    });
   }
 
   async createFygaroOrder(totalAmount, batchId, eventTitle) {

@@ -458,6 +458,9 @@ class AuthService {
       );
 
       logger.info(`Password reset code generated for: ${user.email}`);
+      console.log(
+        `[OTP DEBUG] email=${user.email} purpose=PASSWORD_RESET code=${plainCode}`,
+      );
       return { message: 'Reset code generated', code: plainCode };
     } catch (error) {
       logger.error('Forgot password failed:', error);

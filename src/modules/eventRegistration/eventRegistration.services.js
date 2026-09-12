@@ -8,11 +8,20 @@ const { prisma } = require('../../config/database');
 const PaypalService = new PaymentService();
 
 const getStoredPaymentMethod = (paymentMethod) => {
-  if (paymentMethod === 'FYGARO') {
+  if (paymentMethod === 'FYGARO' || paymentMethod === 'WIPAY') {
     return 'CARD';
   }
 
   return paymentMethod;
+};
+
+const buildOnlineBatchId = (source, paymentMethod) => {
+  // WiPay order_id recommended max ~16 chars; keep it short and URL-safe.
+  if (paymentMethod === 'WIPAY') {
+    return `W${Date.now().toString(36)}`;
+  }
+
+  return `${source}-${Date.now()}`;
 };
 
 const createRegistrationTransaction = async ({
@@ -57,7 +66,7 @@ const createRegistrationTransaction = async ({
       throw new AppError('Registration for this tier is closed.', 400);
     }
 
-    const batchId = `${source}-${Date.now()}`;
+    const batchId = buildOnlineBatchId(source, onlinePaymentMethod);
     const ticketPrice = selectedTier ? Number(selectedTier.price) : Number(event.price);
     let subtotal = ticketPrice * participants.length;
 
@@ -130,36 +139,17 @@ const createRegistrationTransaction = async ({
     });
 
     if (source === 'ONLINE') {
-      const providerOrder = await PaypalService.createOrder(
-        subtotal + totalAdminFee,
-        batchId,
-        onlinePaymentMethod,
-        event.title,
-      );
-
-      if (providerOrder.providerRef) {
-        await tx.payment.update({
-          where: { id: payment.id },
-          data: { providerRef: providerOrder.providerRef },
-        });
-      }
-
-      if (onlinePaymentMethod === 'FYGARO') {
-        return {
-          source,
-          batchId,
-          paymentMethod: 'FYGARO',
-          paymentUrl: providerOrder.paymentUrl,
-          fygaroPaymentUrl: providerOrder.paymentUrl,
-          expiresAt: providerOrder.expiresAt,
-        };
-      }
-
       return {
         source,
-        paypalOrderId: providerOrder.id,
-        approvalUrl: providerOrder.links.find((link) => link.rel === 'approve')
-          ?.href,
+        batchId,
+        paymentId: payment.id,
+        eventTitle: event.title,
+        chargeTotal: subtotal + totalAdminFee,
+        onlinePaymentMethod,
+        customerEmail:
+          user?.email ||
+          participants.find((p) => p.email)?.email ||
+          undefined,
       };
     }
 
@@ -184,6 +174,44 @@ const createRegistrationTransaction = async ({
     paymentEmitter.emit('payment.success', transactionResult.notifyPayload);
   }
 
+  if (source === 'ONLINE' && transactionResult?.batchId) {
+    const providerOrder = await PaypalService.createOrder(
+      transactionResult.chargeTotal,
+      transactionResult.batchId,
+      transactionResult.onlinePaymentMethod,
+      transactionResult.eventTitle,
+      transactionResult.customerEmail,
+    );
+
+    if (providerOrder.providerRef) {
+      await prisma.payment.update({
+        where: { id: transactionResult.paymentId },
+        data: { providerRef: providerOrder.providerRef },
+      });
+    }
+
+    if (
+      transactionResult.onlinePaymentMethod === 'FYGARO' ||
+      transactionResult.onlinePaymentMethod === 'WIPAY'
+    ) {
+      return {
+        source,
+        batchId: transactionResult.batchId,
+        paymentMethod: transactionResult.onlinePaymentMethod,
+        paymentUrl: providerOrder.paymentUrl,
+        fygaroPaymentUrl: providerOrder.paymentUrl,
+        expiresAt: providerOrder.expiresAt || null,
+      };
+    }
+
+    return {
+      source,
+      paypalOrderId: providerOrder.id,
+      approvalUrl: providerOrder.links.find((link) => link.rel === 'approve')
+        ?.href,
+    };
+  }
+
   const { notifyPayload, ...response } = transactionResult;
   return response;
 };
@@ -202,6 +230,15 @@ class RegistrationService {
       data,
       user,
       paymentMethod: 'FYGARO',
+    });
+  }
+
+  async processCheckoutRegistration(data, user) {
+    const paymentMethod = PaymentService.getConfiguredPaymentProvider();
+    return createRegistrationTransaction({
+      data,
+      user,
+      paymentMethod,
     });
   }
 
