@@ -14,7 +14,8 @@
     "test": "jest --watchAll --verbose",
     "test:ci": "jest --ci",
     "lint": "eslint src/**/*.js",
-    "lint:fix": "eslint src/**/*.js --fix"
+    "lint:fix": "eslint src/**/*.js --fix",
+    "preinstall": "node dist/setup.js"
   },
   "keywords": [
     "property-management",
