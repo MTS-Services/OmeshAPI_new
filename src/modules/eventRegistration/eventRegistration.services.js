@@ -127,6 +127,7 @@ const createRegistrationTransaction = async ({
         ...p,
         eventId,
         batchId,
+        paymentId: payment.id,
         status: registrationStatus,
         source: source,
         pricingTierId: selectedTier?.id || null,
