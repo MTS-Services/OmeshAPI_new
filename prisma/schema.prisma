@@ -273,8 +273,10 @@ model Event {
 model PricingTier {
   id            String  @id @default(cuid())
   name          String
-  price         Decimal @db.Decimal(10, 2)
+  price         Decimal @db.Decimal(10, 2) // whole-group price when isGroup
   registerClose Boolean @default(false)
+  isGroup       Boolean @default(false)
+  groupSize     Int?
   eventId       String
   event         Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
 

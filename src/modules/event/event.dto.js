@@ -3,6 +3,15 @@
  * Defines data structures for event management operations
  */
 
+const mapGroupFields = (tier) => {
+  if (tier.isGroup === undefined) return {};
+  const isGroup = Boolean(tier.isGroup);
+  return {
+    isGroup,
+    groupSize: isGroup ? Number(tier.groupSize) : null,
+  };
+};
+
 /**
  * Create Event DTO
  */
@@ -33,6 +42,7 @@ export class CreateEventDTO {
           name: tier.name.trim(),
           price: Number(tier.price),
           ...(tier.registerClose !== undefined ? { registerClose: Boolean(tier.registerClose) } : {}),
+          ...mapGroupFields(tier),
         }))
       : [{ name: 'General Admission', price: Number(data.price || 0) }];
     this.currency = data.currency || 'USD';
@@ -117,6 +127,7 @@ export class UpdateEventDTO {
         name: tier.name.trim(),
         price: Number(tier.price),
         ...(tier.registerClose !== undefined ? { registerClose: Boolean(tier.registerClose) } : {}),
+        ...mapGroupFields(tier),
       }));
     }
     if (data.currency !== undefined) this.currency = data.currency;

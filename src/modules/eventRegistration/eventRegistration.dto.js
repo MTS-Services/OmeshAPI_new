@@ -8,7 +8,7 @@ class RegistrationDTO {
     this.participants = data.participants.map((p) => ({
       firstName: p.firstName.trim(),
       lastName: p.lastName.trim(),
-      email: p.email.toLowerCase().trim(),
+      email: p.email ? String(p.email).toLowerCase().trim() || null : null,
       phone: p.phone || null,
       gender: p.gender || null,
       age: p.age ? parseInt(p.age) : null,

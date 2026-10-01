@@ -490,6 +490,9 @@ class EventRepository {
                   name: tier.name,
                   price: tier.price,
                   ...(tier.registerClose !== undefined ? { registerClose: tier.registerClose } : {}),
+                  ...(tier.isGroup !== undefined
+                    ? { isGroup: tier.isGroup, groupSize: tier.groupSize }
+                    : {}),
                 },
               });
             } else {
@@ -499,6 +502,9 @@ class EventRepository {
                   name: tier.name,
                   price: tier.price,
                   ...(tier.registerClose !== undefined ? { registerClose: tier.registerClose } : {}),
+                  ...(tier.isGroup !== undefined
+                    ? { isGroup: tier.isGroup, groupSize: tier.groupSize }
+                    : {}),
                 },
               });
             }

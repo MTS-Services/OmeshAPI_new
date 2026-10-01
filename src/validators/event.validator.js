@@ -9,6 +9,12 @@ const pricingTierSchema = Joi.object({
   name: Joi.string().trim().min(1).max(100).required(),
   price: Joi.number().precision(2).min(0).required(),
   registerClose: Joi.boolean().optional(),
+  isGroup: Joi.boolean().optional(),
+  groupSize: Joi.when('isGroup', {
+    is: true,
+    then: Joi.number().integer().min(2).max(100).required(),
+    otherwise: Joi.any().strip(),
+  }),
 });
 
 const CreateEventSchema = Joi.object({
