@@ -66,9 +66,36 @@ const createRegistrationTransaction = async ({
       throw new AppError('Registration for this tier is closed.', 400);
     }
 
+    const isGroupTier = Boolean(selectedTier?.isGroup && selectedTier?.groupSize);
+    let subtotal;
+
+    if (isGroupTier) {
+      const groupSize = selectedTier.groupSize;
+      const groupPrice = Number(selectedTier.price);
+
+      if (source === 'ONLINE' && participants.length !== groupSize) {
+        throw new AppError(
+          `This group ticket requires exactly ${groupSize} members.`,
+          400,
+        );
+      }
+
+      const leader = participants[0];
+      if (source === 'ONLINE' && (!leader?.email || !leader?.phone)) {
+        throw new AppError('Group leader email and phone are required.', 400);
+      }
+
+      // Organizers may manually add part of a group; charge each person's share.
+      subtotal =
+        participants.length === groupSize
+          ? groupPrice
+          : Math.round((groupPrice / groupSize) * participants.length * 100) / 100;
+    } else {
+      const ticketPrice = selectedTier ? Number(selectedTier.price) : Number(event.price);
+      subtotal = ticketPrice * participants.length;
+    }
+
     const batchId = buildOnlineBatchId(source, onlinePaymentMethod);
-    const ticketPrice = selectedTier ? Number(selectedTier.price) : Number(event.price);
-    let subtotal = ticketPrice * participants.length;
 
     const tShirtCount = participants.filter((p) => p.buyTShirt).length;
 
@@ -483,7 +510,7 @@ class RegistrationService {
       ticketPrice: registration.pricingTier?.price?.toString() || '',
       firstName: registration.firstName,
       lastName: registration.lastName,
-      email: registration.email,
+      email: registration.email || '',
       phone: registration.phone || '',
       age: registration.age || '',
       gender: registration.gender || '',
