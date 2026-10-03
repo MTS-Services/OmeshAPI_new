@@ -36,8 +36,17 @@ const createRegistrationTransaction = async ({
     couponCode,
     platformFee = 0,
     source,
+    declarationAccepted,
   } = data;
   const onlinePaymentMethod = source === 'ONLINE' ? paymentMethod : 'MANUAL';
+
+  // Users checking out themselves (including promo checkouts) must accept the
+  // declaration; organizers/admins adding participants manually are exempt.
+  const isSelfCheckout = source === 'ONLINE' || user?.role === 'USER';
+  if (isSelfCheckout && !declarationAccepted) {
+    throw new AppError('Please accept the Participant Declaration to continue.', 400);
+  }
+  const declarationAcceptedAt = isSelfCheckout ? new Date() : null;
 
   const transactionResult = await prisma.$transaction(async (tx) => {
     const event = await tx.event.findUnique({
@@ -149,12 +158,16 @@ const createRegistrationTransaction = async ({
       },
     });
 
+    const isFullGroup = isGroupTier && participants.length === selectedTier.groupSize;
+
     await tx.registration.createMany({
-      data: participants.map((p) => ({
+      data: participants.map((p, index) => ({
         ...p,
         eventId,
         batchId,
         paymentId: payment.id,
+        isGroupLeader: isFullGroup && index === 0,
+        declarationAcceptedAt,
         status: registrationStatus,
         source: source,
         pricingTierId: selectedTier?.id || null,
@@ -494,36 +507,41 @@ class RegistrationService {
           select: {
             name: true,
             price: true,
+            isGroup: true,
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [{ createdAt: 'desc' }, { batchId: 'asc' }, { isGroupLeader: 'desc' }, { id: 'asc' }],
     });
 
-    return registrations.map((registration) => ({
-      // registrationId: registration.id,
-      // eventId: registration.eventId,
-      eventTitle: registration.event?.title || '',
-      pricingTier: registration.pricingTier?.name || '',
-      ticketPrice: registration.pricingTier?.price?.toString() || '',
-      firstName: registration.firstName,
-      lastName: registration.lastName,
-      email: registration.email || '',
-      phone: registration.phone || '',
-      age: registration.age || '',
-      gender: registration.gender || '',
-      priceBeforeFee: registration.payment?.subtotal?.toString() || '',
-      processingFee: registration.payment?.processingFee?.toString() || '',
-      couponCode: registration.couponCode || '',
-      selectedTShirtSize: registration.selectedTShirtSize || '',
-      status: registration.status,
-      source: registration.source,
-      teamClub: registration.teamClub || '',
-      residential_area: registration.residential_area || '',
-      createdAt: registration.createdAt.toISOString(),
-    }));
+    return registrations.map((registration) => {
+      const isGroup = Boolean(registration.pricingTier?.isGroup);
+      return {
+        // registrationId: registration.id,
+        // eventId: registration.eventId,
+        eventTitle: registration.event?.title || '',
+        ticket: registration.pricingTier?.name || '',
+        groupId: isGroup ? registration.batchId : '',
+        groupRole: isGroup ? (registration.isGroupLeader ? 'Leader' : 'Member') : '',
+        ticketPrice: registration.pricingTier?.price?.toString() || '',
+        firstName: registration.firstName,
+        lastName: registration.lastName,
+        email: registration.email || '',
+        phone: registration.phone || '',
+        age: registration.age || '',
+        gender: registration.gender || '',
+        priceBeforeFee: registration.payment?.subtotal?.toString() || '',
+        processingFee: registration.payment?.processingFee?.toString() || '',
+        couponCode: registration.couponCode || '',
+        selectedTShirtSize: registration.selectedTShirtSize || '',
+        status: registration.status,
+        source: registration.source,
+        teamClub: registration.teamClub || '',
+        residential_area: registration.residential_area || '',
+        declarationAcceptedAt: registration.declarationAcceptedAt?.toISOString() || '',
+        createdAt: registration.createdAt.toISOString(),
+      };
+    });
   }
 }
 

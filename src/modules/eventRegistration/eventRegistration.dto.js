@@ -5,6 +5,7 @@ class RegistrationDTO {
     this.source = data.source;
     this.platformFee = data.platformFee;
     this.couponCode = data.couponCode || null;
+    this.declarationAccepted = data.declarationAccepted === true;
     this.participants = data.participants.map((p) => ({
       firstName: p.firstName.trim(),
       lastName: p.lastName.trim(),
