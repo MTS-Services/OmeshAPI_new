@@ -342,6 +342,9 @@ model Registration {
   couponCode         String?
   buyTShirt          Boolean   @default(false)
 
+  isGroupLeader         Boolean   @default(false)
+  declarationAcceptedAt DateTime?
+
   status RegistrationStatus @default(PENDING_PAYMENT)
   source String             @default("ONLINE") // ONLINE | MANUAL_ADD
 

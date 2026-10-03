@@ -4,8 +4,8 @@
   "description": "McCann & Curran Property Management Platform API",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "node api.js && node src/server.js",
+    "dev": "node api.js && nodemon src/server.js",
     "prisma:studio": "prisma studio",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

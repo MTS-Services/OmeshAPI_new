@@ -53,6 +53,9 @@ class RegistrationController {
       // 'registrationId',
       // 'eventId',
       'eventTitle',
+      'ticket',
+      'groupId',
+      'groupRole',
       'firstName',
       'lastName',
       'email',
@@ -67,6 +70,7 @@ class RegistrationController {
       'selectedTShirtSize',
       'teamClub',
       'residential_area',
+      'declarationAcceptedAt',
       'createdAt',
     ];
 
@@ -99,6 +103,9 @@ class RegistrationController {
     const worksheet = XLSX.utils.json_to_sheet(rows, {
       header: [
         'eventTitle',
+        'ticket',
+        'groupId',
+        'groupRole',
         'firstName',
         'lastName',
         'email',
@@ -113,6 +120,7 @@ class RegistrationController {
         'selectedTShirtSize',
         'teamClub',
         'residential_area',
+        'declarationAcceptedAt',
         'createdAt',
       ],
     });
