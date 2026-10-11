@@ -87,6 +87,11 @@ enum ToolkitRequestStatus {
   CANCELLED
 }
 
+enum SponsorSupportType {
+  SPONSORSHIP
+  DONATION
+}
+
 enum TrainingCategory {
   FIVE_K // "5K"
   TEN_K // "10K"
@@ -580,6 +585,34 @@ model ToolkitRequest {
   updatedAt DateTime @updatedAt
 
   @@index([status, createdAt])
+}
+
+// -----------------------------------------------------------------
+// SPONSORS / DONATIONS (public form, paid through WiPay, admin-only list)
+// -----------------------------------------------------------------
+
+model SponsorRequest {
+  id          String             @id @default(cuid())
+  supportType SponsorSupportType
+  name        String
+  phone       String
+  email       String
+  eventName   String?
+  message     String?            @db.Text
+
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      String        @default("USD")
+  // Sent to WiPay as order_id
+  orderId       String        @unique
+  paymentStatus PaymentStatus @default(PENDING)
+  transactionId String?
+  paidAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentStatus, createdAt])
+  @@index([supportType, createdAt])
 }
 
 // -----------------------------------------------------------------
