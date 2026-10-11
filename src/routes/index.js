@@ -21,6 +21,7 @@ const dashboardRoutes = require('../modules/dashboard/dashboard.route');
 const paymentRoutes = require('../modules/payment/payment.route');
 const promoCodeRoutes = require('../modules/promoCode/promoCode.route');
 const contactRoutes = require('../modules/questions/questions.route');
+const sponsorRequestRoutes = require('../modules/sponsorRequest/sponsorRequest.route');
 const apiDocsHandler = require('../modules/docs/apiDocsHandler');
 
 // Health check endpoint
@@ -64,5 +65,6 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/payment', paymentRoutes);
 router.use('/promo', promoCodeRoutes);
 router.use('/contact', contactRoutes);
+router.use('/sponsor-requests', sponsorRequestRoutes);
 
 module.exports = router;
