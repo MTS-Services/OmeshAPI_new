@@ -787,7 +787,7 @@ class PaymentService {
     return this.capturePaypalPayment(providerRef);
   }
 
-  async createWiPayOrder(totalAmount, batchId, customerEmail) {
+  async createWiPayOrder(totalAmount, batchId, customerEmail, responseUrl) {
     const config = this.getWiPayConfig();
     const total = Number(totalAmount).toFixed(2);
 
@@ -802,7 +802,7 @@ class PaymentService {
       params.append('method', 'credit_card_co');
       params.append('order_id', batchId);
       params.append('origin', config.origin);
-      params.append('response_url', config.responseUrl);
+      params.append('response_url', responseUrl || config.responseUrl);
       params.append('total', total);
       params.append('data', JSON.stringify({ batchId }));
       if (customerEmail) {
