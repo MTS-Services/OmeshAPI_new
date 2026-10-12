@@ -11,7 +11,12 @@ class SponsorRequestController {
   submitRequest = asyncHandler(async (req, res) => {
     const dto = new CreateSponsorRequestDTO(req.body);
     const result = await services.create(dto);
-    res.sendCreated(result, 'Sponsor request created. Redirecting to payment.');
+    res.sendCreated(
+      result,
+      result.paymentUrl
+        ? 'Sponsor request created. Redirecting to payment.'
+        : 'Sponsor request submitted successfully.',
+    );
   });
 
   wipayConfirm = asyncHandler(async (req, res) => {
