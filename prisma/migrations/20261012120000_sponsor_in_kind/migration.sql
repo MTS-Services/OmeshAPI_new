@@ -1,0 +1,6 @@
+ALTER TYPE "SponsorSupportType" ADD VALUE IF NOT EXISTS 'IN_KIND';
+
+ALTER TABLE "SponsorRequest" ADD COLUMN IF NOT EXISTS "itemDescription" TEXT;
+ALTER TABLE "SponsorRequest" ADD COLUMN IF NOT EXISTS "estimatedValue" DECIMAL(10,2);
+ALTER TABLE "SponsorRequest" ALTER COLUMN "amount" DROP NOT NULL;
+ALTER TABLE "SponsorRequest" ALTER COLUMN "paymentStatus" DROP NOT NULL;

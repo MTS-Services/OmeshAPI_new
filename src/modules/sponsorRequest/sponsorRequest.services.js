@@ -33,6 +33,10 @@ class SponsorRequestServices {
       data: { ...data, orderId: buildSponsorOrderId() },
     });
 
+    if (request.amount === null) {
+      return { orderId: request.orderId, paymentUrl: null };
+    }
+
     try {
       const order = await paymentService.createWiPayOrder(
         request.amount,
@@ -65,7 +69,7 @@ class SponsorRequestServices {
       where: { orderId: resolvedOrderId },
     });
 
-    if (!request) {
+    if (!request || request.amount === null) {
       throw new AppError('Sponsor request not found for this order.', 404);
     }
 
@@ -130,6 +134,7 @@ class SponsorRequestServices {
               { name: { contains: search, mode: 'insensitive' } },
               { email: { contains: search, mode: 'insensitive' } },
               { eventName: { contains: search, mode: 'insensitive' } },
+              { itemDescription: { contains: search, mode: 'insensitive' } },
             ],
           }
         : {}),
@@ -161,9 +166,11 @@ class SponsorRequestServices {
       data: {
         items,
         stats: {
-          total: countOf('SPONSORSHIP') + countOf('DONATION'),
+          total:
+            countOf('SPONSORSHIP') + countOf('DONATION') + countOf('IN_KIND'),
           sponsorships: countOf('SPONSORSHIP'),
           donations: countOf('DONATION'),
+          inKind: countOf('IN_KIND'),
           totalReceived: Number(received._sum.amount || 0),
         },
       },
