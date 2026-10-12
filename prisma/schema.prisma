@@ -90,6 +90,7 @@ enum ToolkitRequestStatus {
 enum SponsorSupportType {
   SPONSORSHIP
   DONATION
+  IN_KIND // hampers, vouchers, products — no online payment
 }
 
 enum TrainingCategory {
@@ -600,11 +601,15 @@ model SponsorRequest {
   eventName   String?
   message     String?            @db.Text
 
-  amount        Decimal       @db.Decimal(10, 2)
-  currency      String        @default("USD")
+  // In-kind only
+  itemDescription String? @db.Text
+
+  // Optional for in-kind; null means no payment
+  amount        Decimal?       @db.Decimal(10, 2)
+  currency      String         @default("USD")
   // Sent to WiPay as order_id
-  orderId       String        @unique
-  paymentStatus PaymentStatus @default(PENDING)
+  orderId       String         @unique
+  paymentStatus PaymentStatus? @default(PENDING)
   transactionId String?
   paidAt        DateTime?
 
