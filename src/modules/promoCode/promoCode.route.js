@@ -1,6 +1,10 @@
 const express = require('express');
 const { validate } = require('../../validators/common.validator');
-const { authenticate, authorize } = require('../../middlewares/auth');
+const {
+  authenticate,
+  authorize,
+  optionalAuthenticate,
+} = require('../../middlewares/auth');
 const PromoCodeController = require('./promoCode.controller');
 const promoSchema = require('../../validators/promoCode.validators');
 
@@ -17,7 +21,7 @@ router.post(
 );
 router.post(
   '/apply',
-  authenticate,
+  optionalAuthenticate,
   validate(promoSchema.apply),
   controller.apply,
 );
