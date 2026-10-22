@@ -1,12 +1,28 @@
+const { AppError } = require('../../middlewares/errorHandler');
+
 class RegistrationDTO {
-  constructor(data) {
+  constructor(data = {}) {
+    const participants = Array.isArray(data.participants) ? data.participants : [];
+    if (
+      !data.eventId ||
+      participants.length === 0 ||
+      participants.some(
+        (p) =>
+          typeof p?.firstName !== 'string' ||
+          typeof p?.lastName !== 'string' ||
+          !p.firstName.trim() ||
+          !p.lastName.trim(),
+      )
+    ) {
+      throw new AppError('Event and participant names are required.', 400);
+    }
+
     this.eventId = data.eventId;
     this.pricingTierId = data.pricingTierId || null;
     this.source = data.source;
-    this.platformFee = data.platformFee;
     this.couponCode = data.couponCode || null;
     this.declarationAccepted = data.declarationAccepted === true;
-    this.participants = data.participants.map((p) => ({
+    this.participants = participants.map((p) => ({
       firstName: p.firstName.trim(),
       lastName: p.lastName.trim(),
       email: p.email ? String(p.email).toLowerCase().trim() || null : null,

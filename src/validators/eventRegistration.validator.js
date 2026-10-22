@@ -3,7 +3,7 @@ const Joi = require('joi');
 const registrationSchema = Joi.object({
   eventId: Joi.string().required(),
   source: Joi.string().valid('ONLINE', 'MANUAL_ADD').required(),
-  platformFee: Joi.number().required(),
+  platformFee: Joi.number().optional(),
   participants: Joi.array()
     .items(
       Joi.object({
