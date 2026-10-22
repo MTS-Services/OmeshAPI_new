@@ -24,6 +24,51 @@ const buildOnlineBatchId = (source, paymentMethod) => {
   return `${source}-${Date.now()}`;
 };
 
+const STAFF_ROLES = ['ORGANIZER', 'ADMIN'];
+
+// Guests and users may only use MANUAL_ADD with the event's promo code
+// (free registration), so the code is re-checked here instead of trusting the client.
+const verifySelfCheckoutPromo = async (tx, { event, couponCode, participants }) => {
+  const code = String(couponCode || '').trim();
+  const promo =
+    code && event.promoCode === code
+      ? await tx.promoCode.findUnique({
+          where: { code },
+          include: { allowedEmails: true },
+        })
+      : null;
+
+  const now = new Date();
+  if (
+    !promo ||
+    !promo.isActive ||
+    (promo.startsAt && now < promo.startsAt) ||
+    (promo.expiresAt && now > promo.expiresAt)
+  ) {
+    throw new AppError('A valid promo code is required for this registration.', 403);
+  }
+
+  const buyerEmail = participants.map((p) => p.email).find(Boolean);
+  if (!buyerEmail) {
+    throw new AppError('An email address is required to use a promo code.', 400);
+  }
+
+  if (
+    promo.allowedEmails.length > 0 &&
+    !promo.allowedEmails.some((e) => e.email.toLowerCase() === buyerEmail)
+  ) {
+    throw new AppError('This promo code is not valid for this email.', 403);
+  }
+
+  const alreadyRegistered = await tx.registration.findFirst({
+    where: { eventId: event.id, email: buyerEmail },
+    select: { id: true },
+  });
+  if (alreadyRegistered) {
+    throw new AppError('This email has already used the promo code for this event.', 403);
+  }
+};
+
 const createRegistrationTransaction = async ({
   data,
   user,
@@ -34,15 +79,20 @@ const createRegistrationTransaction = async ({
     pricingTierId,
     participants,
     couponCode,
-    platformFee = 0,
     source,
     declarationAccepted,
   } = data;
-  const onlinePaymentMethod = source === 'ONLINE' ? paymentMethod : 'MANUAL';
 
-  // Users checking out themselves (including promo checkouts) must accept the
-  // declaration; organizers/admins adding participants manually are exempt.
-  const isSelfCheckout = source === 'ONLINE' || user?.role === 'USER';
+  if (!['ONLINE', 'MANUAL_ADD'].includes(source)) {
+    throw new AppError('Invalid registration source.', 400);
+  }
+
+  const onlinePaymentMethod = source === 'ONLINE' ? paymentMethod : 'MANUAL';
+  const isStaff = STAFF_ROLES.includes(user?.role);
+
+  // Guests and users checking out themselves (including promo checkouts) must
+  // accept the declaration; organizers/admins adding participants are exempt.
+  const isSelfCheckout = source === 'ONLINE' || !isStaff;
   if (isSelfCheckout && !declarationAccepted) {
     throw new AppError('Please accept the Participant Declaration to continue.', 400);
   }
@@ -73,6 +123,10 @@ const createRegistrationTransaction = async ({
 
     if (selectedTier && selectedTier.registerClose) {
       throw new AppError('Registration for this tier is closed.', 400);
+    }
+
+    if (source === 'MANUAL_ADD' && !isStaff) {
+      await verifySelfCheckoutPromo(tx, { event, couponCode, participants });
     }
 
     const isGroupTier = Boolean(selectedTier?.isGroup && selectedTier?.groupSize);
@@ -112,7 +166,10 @@ const createRegistrationTransaction = async ({
       subtotal += Number(event.tShirtPrice) * tShirtCount;
     }
 
-    const platformFeePct = Number(platformFee);
+    const platformSetting = await tx.platformSetting.findUnique({
+      where: { id: 1 },
+    });
+    const platformFeePct = Number(platformSetting?.platformFeePct || 0);
     const totalAdminFee = (subtotal * platformFeePct) / 100;
 
     let paymentStatus = 'PENDING';
@@ -173,7 +230,11 @@ const createRegistrationTransaction = async ({
         pricingTierId: selectedTier?.id || null,
         couponCode: couponCode,
         userId:
-          source === 'ONLINE' ? user.id : user.role === 'USER' ? user.id : null,
+          source === 'ONLINE'
+            ? user?.id ?? null
+            : user?.role === 'USER'
+              ? user.id
+              : null,
         selectedTShirtSize: p.selectedTShirtSize || null,
         buyTShirt: p.buyTShirt || false,
       })),
