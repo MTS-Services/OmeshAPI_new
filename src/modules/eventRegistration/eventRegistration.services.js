@@ -575,8 +575,25 @@ class RegistrationService {
       orderBy: [{ createdAt: 'desc' }, { batchId: 'asc' }, { isGroupLeader: 'desc' }, { id: 'asc' }],
     });
 
+    // One payment covers every participant in a checkout, so its amounts belong on a
+    // single row (the group leader if any) or the sheet would multiply them.
+    const paymentOwnerRow = new Map();
+    for (const registration of registrations) {
+      if (!registration.paymentId) continue;
+      const current = paymentOwnerRow.get(registration.paymentId);
+      if (!current || (registration.isGroupLeader && !current.isGroupLeader)) {
+        paymentOwnerRow.set(registration.paymentId, registration);
+      }
+    }
+
     return registrations.map((registration) => {
       const isGroup = Boolean(registration.pricingTier?.isGroup);
+      const carriesPayment =
+        !registration.paymentId || paymentOwnerRow.get(registration.paymentId)?.id === registration.id;
+      const paymentAmount = (value) => {
+        if (value === null || value === undefined) return '';
+        return carriesPayment ? value.toString() : '0';
+      };
       return {
         // registrationId: registration.id,
         // eventId: registration.eventId,
@@ -591,8 +608,8 @@ class RegistrationService {
         phone: registration.phone || '',
         age: registration.age || '',
         gender: registration.gender || '',
-        priceBeforeFee: registration.payment?.subtotal?.toString() || '',
-        processingFee: registration.payment?.processingFee?.toString() || '',
+        priceBeforeFee: paymentAmount(registration.payment?.subtotal),
+        processingFee: paymentAmount(registration.payment?.processingFee),
         couponCode: registration.couponCode || '',
         selectedTShirtSize: registration.selectedTShirtSize || '',
         status: registration.status,
