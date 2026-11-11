@@ -5,11 +5,6 @@
 # ────────────────────────────────────────────────────────────────────
 # ENVIRONMENT & SECRETS
 # ────────────────────────────────────────────────────────────────────
-.env
-.env.local
-.env.production
-.env.development
-.env.test
 *.env
 
 # ────────────────────────────────────────────────────────────────────
@@ -81,11 +76,6 @@ out/
 # ────────────────────────────────────────────────────────────────────
 
 # VS Code
-.vscode/
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 *.code-workspace
 
 # JetBrains IDEs
@@ -252,3 +242,5 @@ docs/_build/
 branch_structure.json
 temp_auto_push.bat
 temp_interactive_push.bat
+config.bat
+.gitignore
